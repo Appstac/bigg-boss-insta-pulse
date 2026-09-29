@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { computeAnalytics, toClient } from "@/lib/analytics";
 import { loadDataset } from "@/lib/data";
-import { compact, decimal, percent, signed } from "@/lib/format";
+import { compact, decimal, full, percent, signed } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { DailyBars, AreaTrend, GrowthEngagementScatter } from "@/components/Charts";
 import { ContestantGrid } from "@/components/ContestantGrid";
@@ -53,7 +53,7 @@ export default async function Dashboard() {
               <span className="brand-text block">Instagram Pulse</span>
             </h1>
             <p className="mt-3 max-w-xl text-sm text-ink-2 sm:text-base">
-              Daily follower growth, posting and engagement for all {ds.contestants.length} contestants. {active.length} in the house, {ds.contestants.length - active.length} evicted.
+              Live follower counts, growth, posting and engagement for all {ds.contestants.length} contestants. {active.length} in the house, {ds.contestants.length - active.length} evicted.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Link href="/compare" className="rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-page">Compare contestants</Link>
@@ -79,9 +79,9 @@ export default async function Dashboard() {
           sub={<>Today <Delta value={house.gain1d} /></>}
           aside={<Sparkline values={house.dailyTotal.slice(-14).map((d) => d.followers)} width={88} height={34} />}
         />
-        <StatTile icon={<Icon name="trend" />} label="Gained this week" value={<Delta value={house.gain7d} />} sub={`Avg ${compact(house.avgGain7d)} per contestant`} />
+        <StatTile icon={<Icon name="trend" />} label="Gained this week" value={<Delta value={house.gain7d} />} sub={house.avgGain7d == null ? "Fills in after 7 days of tracking" : `Avg ${compact(house.avgGain7d)} per contestant`} />
         <StatTile icon={<Icon name="star" />} label={`Gained ${a.growthSince}`} value={<Delta value={house.gainSeason} />} sub={`Avg growth ${percent(house.avgPctSeason, 1)}`} />
-        <StatTile icon={<Icon name="heart" />} label="Likes + comments" value={compact(house.totalInteractions)} sub={`${house.postsSeason} posts · typical engagement ${percent(house.avgEngagement, 1)}`} />
+        <StatTile icon={<Icon name="heart" />} label="Likes + comments" value={compact(house.totalInteractions)} sub={`${full(house.postsSeason)} posts · typical engagement ${percent(house.avgEngagement, 1)}`} />
       </div>
 
       {/* Live: 15-minute data from the last 24 hours */}
@@ -98,13 +98,20 @@ export default async function Dashboard() {
           <div className="grid gap-6 lg:grid-cols-5">
             <div className="lg:col-span-3">
               <div className="mb-1 text-sm text-ink-2">
-                Combined followers · <Delta value={house.gain24h} /> in 24 h
+                Combined followers ·{" "}
+                {house.gain24h != null ? (
+                  <><Delta value={house.gain24h} /> in 24 h</>
+                ) : (
+                  <><Delta value={house.liveGain} /> since {house.liveSince ? istTime(house.liveSince) : ""} IST</>
+                )}
               </div>
               <AreaTrend data={house.intradayTotal.map((p) => ({ date: p.t, value: p.followers }))} label="Combined followers" format="compact" xFormat="time" withRange={false} height={240} />
             </div>
             <div className="lg:col-span-2">
-              <div className="mb-3 text-sm text-ink-2">Biggest gains in the last 24 h (last hour on the right)</div>
-              <RankedBars stats={stats} get={(s) => s.gain24h} fmt={(n) => signed(n)} sub={(s) => (s.gain1h == null ? "" : `${signed(s.gain1h)} 1h`)} limit={8} />
+              <div className="mb-3 text-sm text-ink-2">
+                Biggest gains {house.gain24h != null ? "in the last 24 h" : `since ${house.liveSince ? istTime(house.liveSince) : ""} IST`} · last hour on the right
+              </div>
+              <RankedBars stats={stats} get={(s) => s.gain24h ?? s.liveGain} fmt={(n) => signed(n)} sub={(s) => (s.gain1h == null ? "" : `${signed(s.gain1h)} 1h`)} limit={8} />
             </div>
           </div>
         ) : (
@@ -155,7 +162,9 @@ export default async function Dashboard() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted">No rank changes in the last week.</p>
+            <p className="text-sm text-muted">
+              {stats.every((s) => s.rankChange7d == null) ? "Rank changes appear after 7 days of tracking." : "No rank changes in the last week."}
+            </p>
           )}
         </Section>
       </div>
@@ -184,9 +193,9 @@ export default async function Dashboard() {
       </Section>
       <div className="grid gap-4 lg:grid-cols-5">
         <Section title="Weekly gains" desc="★ marks each week's top gainer" className="lg:col-span-3">
-          <WeeklyTable stats={stats} weekLabels={a.weekLabels} />
+          <WeeklyTable stats={stats} weekLabels={a.weekLabels} premiereDate={ds.season.premiereDate} trackingStart={a.dates[0] ?? null} growthSince={a.growthSince} />
         </Section>
-        <Section title="Share of season gain" desc="Each contestant's slice of all new followers" className="lg:col-span-2">
+        <Section title="Share of new followers" desc={`Each contestant's slice of all followers gained ${a.growthSince}`} className="lg:col-span-2">
           <RankedBars stats={stats} get={(s) => s.shareOfHouseGain} fmt={(n) => percent(n, 1)} sub={(s) => signed(s.gainSeason)} limit={10} />
         </Section>
       </div>
@@ -195,7 +204,7 @@ export default async function Dashboard() {
           <RankedBars stats={stats} get={(s) => s.pctSeason} fmt={(n) => percent(n, 1, true)} sub={(s) => compact(s.followers)} limit={8} />
         </Section>
         <Section title="Momentum" desc="This week's gain vs last week's">
-          <RankedBars stats={stats} get={(s) => s.momentum} fmt={(n) => percent(n, 0, true)} sub={(s) => signed(s.gain7d)} limit={8} />
+          <RankedBars stats={stats} get={(s) => s.momentum} fmt={(n) => percent(n, 0, true)} sub={(s) => signed(s.gain7d)} limit={8} empty="Momentum compares this week with last week, so it appears after 14 days of tracking." />
         </Section>
       </div>
 
@@ -211,7 +220,7 @@ export default async function Dashboard() {
           <RankedBars stats={stats} get={(s) => s.avgLikes} fmt={compact} limit={8} />
         </Section>
         <Section title="Followers gained per post" desc={`Followers gained ${a.growthSince} ÷ posts in that time`}>
-          <RankedBars stats={stats} get={(s) => s.gainPerPost} fmt={compact} sub={(s) => `${s.postsSeason} posts`} limit={8} />
+          <RankedBars stats={stats} get={(s) => s.gainPerPost} fmt={(n) => full(n)} sub={(s) => `${s.postsSeason} posts`} limit={8} />
         </Section>
       </div>
 
@@ -221,12 +230,12 @@ export default async function Dashboard() {
           <DailyBars data={house.dailyPosts.map((d) => ({ date: d.date, value: d.posts }))} label="Posts" format="count" height={260} />
         </Section>
         <Section title="Most active" desc="Posts per day since premiere">
-          <RankedBars stats={stats} get={(s) => s.postsPerDay} fmt={(n) => decimal(n)} sub={(s) => `${s.postsLast7d} this week`} limit={7} />
+          <RankedBars stats={stats} get={(s) => s.postsPerDay} fmt={(n) => `${decimal(n)}/day`} sub={(s) => `${s.postsLast7d} this week`} limit={7} />
         </Section>
       </div>
 
       <div id="table">
-        <Section title="Full data table" desc="Click a column to sort. Tick rows and press Compare.">
+        <Section title="Full data table" desc="Tap a column heading to sort. Tick rows, then press Compare.">
           <LeaderboardTable stats={client} growthLabel={a.growthSince} />
         </Section>
       </div>

@@ -13,7 +13,7 @@ export default async function ContestantsPage() {
       <div>
         <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Season 10</div>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">Contestants</h1>
-        <p className="mt-1 text-sm text-muted">All {stats.length} housemates with live Instagram numbers. Press + on any cards to compare them.</p>
+        <p className="mt-1 text-sm text-muted">All {stats.length} housemates with live Instagram numbers. Press + on two or more cards to compare them.</p>
       </div>
       <ContestantGrid stats={stats} />
     </div>

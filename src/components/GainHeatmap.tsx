@@ -9,8 +9,10 @@ import { Avatar } from "./Avatar";
  * readable), red for losses, neutral for ~0.
  */
 export function GainHeatmap({ stats, dates, premiereDate, days = 21 }: { stats: ContestantStats[]; dates: string[]; premiereDate: string; days?: number }) {
-  const cols = dates.slice(-days);
-  const rows = [...stats].sort((a, b) => (b.gain7d ?? 0) - (a.gain7d ?? 0));
+  // Skip days nobody has a change for (e.g. the first day of tracking).
+  const cols = dates.slice(-days).filter((d) => stats.some((s) => s.series.find((p) => p.date === d)?.gain != null));
+  if (!cols.length) return <p className="text-sm text-muted">Daily changes appear after the second day of tracking.</p>;
+  const rows = [...stats].sort((a, b) => (b.gain7d ?? b.gainSeason ?? 0) - (a.gain7d ?? a.gainSeason ?? 0));
 
   const cell = (gain: number | null, rowMax: number) => {
     if (gain == null) return { bg: "transparent", fg: "var(--muted)" };

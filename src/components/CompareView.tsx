@@ -37,7 +37,7 @@ const METRICS: { group: string; rows: Metric[] }[] = [
       { label: "Growth % last 7 days", get: (s) => s.pct7d, show: (s) => <Delta value={s.pct7d} kind="percent" />, gap: (d) => pts(d, 1), higherIsBetter: true },
       { label: "Avg daily gain (7d)", get: (s) => s.avgDailyGain7d, show: (s) => compact(s.avgDailyGain7d), gap: (d) => signed(d), higherIsBetter: true },
       { label: "Momentum", hint: "Last 7 days' gain vs the 7 days before", get: (s) => s.momentum, show: (s) => <Delta value={s.momentum} kind="percent" />, higherIsBetter: true },
-      { label: "Share of house gain", get: (s) => s.shareOfHouseGain, show: (s) => percent(s.shareOfHouseGain), higherIsBetter: true },
+      { label: "Share of new followers", get: (s) => s.shareOfHouseGain, show: (s) => percent(s.shareOfHouseGain), higherIsBetter: true },
       { label: "Best day", get: (s) => s.bestDay?.gain ?? null, show: (s) => (s.bestDay ? <><Delta value={s.bestDay.gain} /> <span className="text-muted">{shortDate(s.bestDay.date)}</span></> : "—"), higherIsBetter: true },
       { label: "Days with growth", get: (s) => s.positiveDaysPct, show: (s) => percent(s.positiveDaysPct, 0), higherIsBetter: true },
     ],
@@ -46,7 +46,7 @@ const METRICS: { group: string; rows: Metric[] }[] = [
     group: "Posting",
     rows: [
       { label: "Posts since premiere", get: (s) => s.postsSeason, show: (s) => full(s.postsSeason), gap: (d) => signed(d, full), higherIsBetter: true },
-      { label: "Posts per day", get: (s) => s.postsPerDay, show: (s) => decimal(s.postsPerDay), gap: (d) => signed(d, (n) => n.toFixed(1)), higherIsBetter: true },
+      { label: "Posts per day", get: (s) => s.postsPerDay, show: (s) => decimal(s.postsPerDay), gap: (d) => (Math.abs(d) < 0.05 ? "≈ same" : signed(d, (n) => n.toFixed(1))), higherIsBetter: true },
       { label: "Posts last 7 days", get: (s) => s.postsLast7d, show: (s) => full(s.postsLast7d), gap: (d) => signed(d, full), higherIsBetter: true },
       { label: "Reels / videos share", get: (s) => s.reelsShare, show: (s) => percent(s.reelsShare, 0) },
       { label: "Total posts on profile", get: (s) => s.postsTotal, show: (s) => full(s.postsTotal) },
@@ -58,7 +58,7 @@ const METRICS: { group: string; rows: Metric[] }[] = [
       { label: "Engagement rate", hint: "Median (likes + comments) ÷ followers per post", get: (s) => s.engagementRate, show: (s) => percent(s.engagementRate, 2), gap: (d) => pts(d, 2), higherIsBetter: true },
       { label: "Avg likes / post", get: (s) => s.avgLikes, show: (s) => compact(s.avgLikes), gap: (d) => signed(d), higherIsBetter: true },
       { label: "Median likes / post", get: (s) => s.medianLikes, show: (s) => compact(s.medianLikes), gap: (d) => signed(d), higherIsBetter: true },
-      { label: "Avg comments / post", get: (s) => s.avgComments, show: (s) => compact(s.avgComments), gap: (d) => signed(d), higherIsBetter: true },
+      { label: "Avg comments / post", get: (s) => s.avgComments, show: (s) => compact(s.avgComments == null ? null : Math.round(s.avgComments)), gap: (d) => signed(Math.round(d)), higherIsBetter: true },
       { label: "Avg interactions / post", get: (s) => s.avgInteractions, show: (s) => compact(s.avgInteractions), gap: (d) => signed(d), higherIsBetter: true },
       { label: "Top post", get: (s) => s.topPost?.interactions ?? null, show: (s) => (s.topPost ? <>{compact(s.topPost.interactions)} <span className="text-muted">{s.topPost.type === "REEL" ? "reel" : "post"}</span></> : "—"), higherIsBetter: true },
     ],
@@ -77,7 +77,7 @@ const MULTI_COLS: Record<number, string> = {
 
 const RADAR: { label: string; get: (s: ClientStats) => number | null }[] = [
   { label: "Followers", get: (s) => s.followers },
-  { label: "Season gain", get: (s) => s.gainSeason },
+  { label: "Gain", get: (s) => s.gainSeason },
   { label: "Growth %", get: (s) => s.pctSeason },
   { label: "7-day gain", get: (s) => s.gain7d },
   { label: "Engagement", get: (s) => s.engagementRate },
@@ -127,7 +127,8 @@ export function CompareView({
   }
   const topWins = Math.max(0, ...wins.values());
 
-  const radarData = RADAR.map((m) => {
+  // Skip axes nobody selected has data for yet (e.g. 7-day gain in the first week).
+  const radarData = RADAR.filter((m) => chosen.some((s) => m.get(s) != null)).map((m) => {
     const vals = chosen.map((s) => m.get(s) ?? 0);
     const max = Math.max(...vals.map((v) => Math.max(0, v)), 1e-9);
     const row: Record<string, string | number> = { metric: m.label };
@@ -144,7 +145,10 @@ export function CompareView({
           <span className="text-muted">Quick picks:</span>
           {[
             ["Top 3 by followers", [...stats].sort((a, b) => b.followers - a.followers).slice(0, 3)],
-            ["Top 3 gainers this week", [...stats].sort((a, b) => (b.gain7d ?? 0) - (a.gain7d ?? 0)).slice(0, 3)],
+            [
+              stats.some((s) => s.gain7d != null) ? "Top 3 gainers this week" : "Top 3 gainers",
+              [...stats].sort((a, b) => (b.gain7d ?? b.gainSeason ?? 0) - (a.gain7d ?? a.gainSeason ?? 0)).slice(0, 3),
+            ],
             ["Most engaging 3", [...stats].sort((a, b) => (b.engagementRate ?? 0) - (a.engagementRate ?? 0)).slice(0, 3)],
             ["Evicted", stats.filter((s) => s.contestant.status === "evicted").slice(0, MAX_SERIES)],
           ].map(([label, list]) => (
@@ -165,20 +169,20 @@ export function CompareView({
         </div>
       ) : (
         <>
-          <div className={`grid gap-3 ${two ? "grid-cols-[1fr_auto_1fr]" : MULTI_COLS[chosen.length] ?? "grid-cols-2 md:grid-cols-3"}`}>
+          <div className={`grid gap-2 sm:gap-3 ${two ? "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]" : MULTI_COLS[chosen.length] ?? "grid-cols-2 md:grid-cols-3"}`}>
             {chosen.map((s, i) => (
               <FragmentWithVs key={s.contestant.id} vs={two && i === 1}>
-                <Link href={`/contestants/${s.contestant.id}`} className="card relative flex flex-col items-center overflow-hidden p-4 text-center transition-transform hover:-translate-y-0.5 sm:p-5">
+                <Link href={`/contestants/${s.contestant.id}`} className="card relative flex min-w-0 flex-col items-center overflow-hidden p-3 text-center transition-transform hover:-translate-y-0.5 sm:p-5">
                   <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: seriesVar(slots[s.contestant.id]) }} />
                   {wins.get(s.contestant.id) === topWins && topWins > 0 && (
                     <span className="absolute right-2 top-3 rounded-full bg-up-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-up">Leads</span>
                   )}
-                  <Avatar name={s.contestant.name} photo={s.photo} size={two ? 96 : 72} rounded="xl" evicted={s.contestant.status === "evicted"} ring={seriesVar(slots[s.contestant.id])} />
+                  <Avatar name={s.contestant.name} photo={s.photo} size={two ? 80 : 64} rounded="xl" evicted={s.contestant.status === "evicted"} ring={seriesVar(slots[s.contestant.id])} />
                   <div className="mt-3 font-semibold leading-tight">{s.contestant.name}</div>
                   <div className="text-xs text-muted">{s.contestant.status === "evicted" ? "Evicted" : "In house"} · Rank #{s.rank}</div>
                   <div className="tnum mt-3 text-2xl font-bold tracking-tight">{compact(s.followers)}</div>
                   <Delta value={s.gain1d} pill className="mt-1" />
-                  <Sparkline values={s.sparkline} width={120} height={32} className="mt-3" />
+                  <Sparkline values={s.sparkline} width={100} height={30} className="mt-3 max-w-full" />
                   <div className="mt-3 text-xs text-muted">
                     Leads <strong className="text-ink">{wins.get(s.contestant.id)}</strong> of {contested} metrics
                   </div>
@@ -189,20 +193,21 @@ export function CompareView({
 
           <Section title="Comparison table" desc="★ marks the leader in each row.">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+              <table className={`w-full text-xs sm:text-sm ${chosen.length > 3 ? "min-w-[560px]" : ""}`}>
                 <thead>
                   <tr className="border-b border-line">
-                    <th className="py-2 pr-4 text-left text-xs font-medium uppercase tracking-wide text-muted">Metric</th>
+                    <th className="py-2 pr-2 text-left text-xs font-medium uppercase tracking-wide text-muted sm:pr-4">Metric</th>
                     {chosen.map((s) => (
-                      <th key={s.contestant.id} className="py-2 pl-3 text-right font-medium">
+                      <th key={s.contestant.id} className="py-2 pl-2 text-right font-medium sm:pl-3">
                         <Link href={`/contestants/${s.contestant.id}`} className="inline-flex items-center gap-1.5 hover:underline">
                           <Avatar name={s.contestant.name} photo={s.photo} size={26} ring={seriesVar(slots[s.contestant.id])} />
-                          {s.contestant.name}
+                          <span className="sm:hidden">{s.contestant.name.split(" ")[0]}</span>
+                          <span className="hidden sm:inline">{s.contestant.name}</span>
                         </Link>
                         <div className="text-xs font-normal text-muted">{s.contestant.status === "evicted" ? "Evicted" : "In house"}</div>
                       </th>
                     ))}
-                    {two && <th className="py-2 pl-3 text-right text-xs font-medium uppercase tracking-wide text-muted">Gap</th>}
+                    {two && <th className="hidden py-2 pl-2 sm:table-cell sm:pl-3 text-right text-xs font-medium uppercase tracking-wide text-muted">Gap</th>}
                   </tr>
                 </thead>
                 {METRICS.map((g) => (
@@ -210,7 +215,7 @@ export function CompareView({
                     <tr>
                       <td colSpan={chosen.length + 2} className="pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-ink-2">{g.group}</td>
                     </tr>
-                    {g.rows.map((m) => {
+                    {g.rows.filter((m) => chosen.some((s) => m.get(s) != null)).map((m) => {
                       const vals = chosen.map((s) => m.get(s));
                       const valid = vals.filter((v): v is number => v != null);
                       const best =
@@ -219,20 +224,20 @@ export function CompareView({
                           : m.higherIsBetter ? Math.max(...valid) : Math.min(...valid);
                       return (
                         <tr key={m.label} className="border-b border-line last:border-0 hover:bg-surface-2">
-                          <td className="py-2 pr-4 text-ink-2" title={m.hint}>
+                          <td className="py-2 pr-2 text-ink-2 sm:pr-4" title={m.hint}>
                             {m.label.startsWith("Posts") ? m.label : m.label.replace("since premiere", growthLabel)}
                           </td>
                           {chosen.map((s, i) => {
                             const lead = best != null && vals[i] === best;
                             return (
-                              <td key={s.contestant.id} className={`tnum py-2 pl-3 text-right ${lead ? "bg-highlight font-semibold" : ""}`}>
+                              <td key={s.contestant.id} className={`tnum whitespace-nowrap py-2 pl-2 text-right sm:pl-3 ${lead ? "bg-highlight font-semibold" : ""}`}>
                                 {lead && <span className="mr-1 text-accent" aria-label="leader">★</span>}
                                 {m.show(s)}
                               </td>
                             );
                           })}
                           {two && (
-                            <td className="tnum py-2 pl-3 text-right text-ink-2">
+                            <td className="tnum hidden whitespace-nowrap py-2 pl-2 text-right text-ink-2 sm:table-cell sm:pl-3">
                               {m.gap && vals[0] != null && vals[1] != null ? m.gap(vals[0] - vals[1]) : ""}
                             </td>
                           )}
@@ -243,13 +248,16 @@ export function CompareView({
                 ))}
               </table>
             </div>
-            {two && <p className="mt-2 text-xs text-muted">Gap = {chosen[0].contestant.name} minus {chosen[1].contestant.name}.</p>}
+            <p className="mt-2 text-xs text-muted">
+              {two && <span className="hidden sm:inline">Gap = {chosen[0].contestant.name} minus {chosen[1].contestant.name}. </span>}
+              {chosen.every((c) => c.gain7d == null) && "7-day figures and momentum are hidden until 7 days of tracking exist."}
+            </p>
           </Section>
 
           <Section
             title="Follower trend"
             action={
-              <div className="flex flex-wrap gap-2">
+              <div className="flex max-w-full flex-wrap gap-2">
                 <Segmented value={mode} options={trendModes(growthLabel)} onChange={setMode} />
                 <Segmented value={range} options={TREND_RANGES} onChange={setRange} />
               </div>

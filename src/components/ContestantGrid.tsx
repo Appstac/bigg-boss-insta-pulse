@@ -87,7 +87,8 @@ export function ContestantGrid({ stats }: { stats: ClientStats[] }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="tnum text-xs text-muted">#{i + 1}</span>
+                    {/* The photo badge is the follower rank; show the list position only when sorted by something else. */}
+                    {sort !== "followers" && <span className="tnum text-xs text-muted">#{i + 1} by {SORTS.find((x) => x.value === sort)?.label.toLowerCase()}</span>}
                     {evicted && <span className="rounded bg-surface-2 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted">Evicted</span>}
                   </div>
                   <div className="truncate font-semibold leading-tight">{s.contestant.name}</div>
@@ -120,8 +121,17 @@ export function ContestantGrid({ stats }: { stats: ClientStats[] }) {
                   <div className="font-semibold">{m.node}</div>
                 </div>
                 <div>
-                  <div className="text-muted">Rank 7d</div>
-                  <div className="font-semibold"><RankChange value={s.rankChange7d} /></div>
+                  {s.rankChange7d != null ? (
+                    <>
+                      <div className="text-muted">Rank 7d</div>
+                      <div className="font-semibold"><RankChange value={s.rankChange7d} /></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-muted">24 h</div>
+                      <div className="font-semibold"><Delta value={s.gain24h ?? s.liveGain} /></div>
+                    </>
+                  )}
                 </div>
                 <div>
                   <div className="text-muted">Eng. rate</div>

@@ -15,7 +15,7 @@ import {
 import type { ClientStats } from "@/lib/analytics";
 import { seriesVar } from "@/lib/colors";
 import { Avatar } from "./Avatar";
-import { compact, percent, shortDate, signed } from "@/lib/format";
+import { axisFormatter, compact, percent, shortDate, signed } from "@/lib/format";
 
 export type TrendMode = "followers" | "indexed" | "gain";
 export type TrendRange = "7" | "14" | "30" | "all";
@@ -99,6 +99,13 @@ export function TrendChart({ stats, slots, mode, premiereDate, range = "all", he
     />
   );
 
+  // Tick labels precise enough to differ (early on, growth is a fraction of a percent).
+  const vals = rows.flatMap((r) => stats.map((s) => r[s.contestant.id])).filter((v): v is number => typeof v === "number");
+  const lo = vals.length ? Math.min(...vals) : 0;
+  const hi = vals.length ? Math.max(...vals) : 1;
+  const pctDigits = hi - lo < 0.5 ? 2 : hi - lo < 5 ? 1 : 0;
+  const countTick = axisFormatter(lo, hi);
+
   const common = {
     xAxis: <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={24} tickLine={false} />,
     yAxis: (
@@ -106,7 +113,7 @@ export function TrendChart({ stats, slots, mode, premiereDate, range = "all", he
         width={56}
         tickLine={false}
         axisLine={false}
-        tickFormatter={(v: number) => (mode === "indexed" ? `${Math.round(v)}%` : compact(v))}
+        tickFormatter={(v: number) => (mode === "indexed" ? `${v.toFixed(pctDigits)}%` : countTick(v))}
         domain={mode === "followers" ? ["auto", "auto"] : undefined}
       />
     ),

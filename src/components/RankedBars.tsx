@@ -10,6 +10,7 @@ export function RankedBars({
   sub,
   limit,
   color = "var(--series-1)",
+  empty = "Not enough data yet.",
 }: {
   stats: ContestantStats[];
   get: (s: ContestantStats) => number | null;
@@ -17,12 +18,15 @@ export function RankedBars({
   sub?: (s: ContestantStats) => React.ReactNode;
   limit?: number;
   color?: string;
+  /** Shown instead of an empty list. */
+  empty?: string;
 }) {
   const rows = stats
     .filter((s) => get(s) != null)
     .sort((a, b) => get(b)! - get(a)!)
     .slice(0, limit);
   const max = Math.max(...rows.map((s) => Math.abs(get(s)!)), 1e-9);
+  if (!rows.length) return <p className="text-sm text-muted">{empty}</p>;
   return (
     <ol className="space-y-2.5">
       {rows.map((s, i) => {

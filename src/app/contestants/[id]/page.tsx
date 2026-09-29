@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { computeAnalytics, istDate, mean, toClient } from "@/lib/analytics";
 import { loadContestants, loadDataset } from "@/lib/data";
-import { compact, decimal, full, percent, shortDate, signed, WEEKDAYS } from "@/lib/format";
+import { compact, decimal, full, istTime, percent, shortDate, signed, WEEKDAYS } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { AreaTrend, DailyBars, RankHistory, WeeklyBars } from "@/components/Charts";
 import { PostEngagementBars } from "@/components/ContestantCharts";
@@ -110,12 +110,12 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
       {/* KPI tiles */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile icon={<Icon name="rank" />} label="Rank by followers" value={`#${s.rank}`} sub={<>of {total} · 7d <RankChange value={s.rankChange7d} /></>} />
-        <StatTile icon={<Icon name="trend" />} label="Last 7 days" value={<Delta value={s.gain7d} />} sub={<><Delta value={s.pct7d} kind="percent" /> · #{rankOf((x) => x.gain7d)} in house</>} />
-        <StatTile icon={<Icon name="star" />} label={a.growthSince[0].toUpperCase() + a.growthSince.slice(1)} value={<Delta value={s.gainSeason} />} sub={<><Delta value={s.pctSeason} kind="percent" /> · #{rankOf((x) => x.gainSeason)} in house</>} />
-        <StatTile icon={<Icon name="bolt" />} label="Momentum" value={<Delta value={s.momentum} kind="percent" />} sub="This week vs last week" />
-        <StatTile icon={<Icon name="calendar" />} label="Projected in 7 days" value={compact(s.projected7d)} sub={`At ${compact(s.avgDailyGain7d)}/day recent pace`} />
+        <StatTile icon={<Icon name="trend" />} label="Last 7 days" value={<Delta value={s.gain7d} />} sub={s.gain7d == null ? "Fills in after 7 days of tracking" : <><Delta value={s.pct7d} kind="percent" /> · #{rankOf((x) => x.gain7d)} in house</>} />
+        <StatTile icon={<Icon name="star" />} label={a.growthSince[0].toUpperCase() + a.growthSince.slice(1)} value={<Delta value={s.gainSeason} />} sub={s.gainSeason == null ? "Fills in after the second day" : <><Delta value={s.pctSeason} kind="percent" /> · #{rankOf((x) => x.gainSeason)} in house</>} />
+        <StatTile icon={<Icon name="bolt" />} label="Momentum" value={<Delta value={s.momentum} kind="percent" />} sub={s.momentum == null ? "Appears after 14 days of tracking" : "This week vs last week"} />
+        <StatTile icon={<Icon name="calendar" />} label="Projected in 7 days" value={compact(s.projected7d)} sub={s.projected7d == null ? "Needs 7 days of data" : `At ${compact(s.avgDailyGain7d)}/day recent pace`} />
         <StatTile icon={<Icon name="heart" />} label="Engagement rate" value={percent(s.engagementRate, 2)} sub={`#${rankOf((x) => x.engagementRate)} of ${total} · per post`} />
-        <StatTile icon={<Icon name="heart" />} label="Avg likes / post" value={compact(s.avgLikes)} sub={`Median ${compact(s.medianLikes)} · ${compact(s.avgComments)} comments`} />
+        <StatTile icon={<Icon name="heart" />} label="Avg likes / post" value={compact(s.avgLikes)} sub={`Median ${compact(s.medianLikes)} · ${compact(s.avgComments == null ? null : Math.round(s.avgComments))} comments`} />
         <StatTile icon={<Icon name="image" />} label="Posts since premiere" value={full(s.postsSeason)} sub={`${decimal(s.postsPerDay)}/day · ${s.postsLast7d} this week`} />
       </div>
 
@@ -126,17 +126,27 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
         <Section title="Compared with the house" desc="Bar = this contestant · tick = house average">
           <div className="space-y-5">
             <VsAverage label={`Growth ${a.growthSince}`} value={s.pctSeason} avg={houseAvg((x) => x.pctSeason)} max={houseMax((x) => x.pctSeason)} fmt={(n) => percent(n, 1)} />
-            <VsAverage label="Gain last 7 days" value={s.gain7d} avg={houseAvg((x) => x.gain7d)} max={houseMax((x) => x.gain7d)} fmt={compact} />
+            {s.gain7d != null && <VsAverage label="Gain last 7 days" value={s.gain7d} avg={houseAvg((x) => x.gain7d)} max={houseMax((x) => x.gain7d)} fmt={compact} />}
             <VsAverage label="Engagement rate" value={s.engagementRate} avg={houseAvg((x) => x.engagementRate)} max={houseMax((x) => x.engagementRate)} fmt={(n) => percent(n, 2)} />
             <VsAverage label="Avg likes / post" value={s.avgLikes} avg={houseAvg((x) => x.avgLikes)} max={houseMax((x) => x.avgLikes)} fmt={compact} />
             <VsAverage label="Posts per day" value={s.postsPerDay} avg={houseAvg((x) => x.postsPerDay)} max={houseMax((x) => x.postsPerDay)} fmt={(n) => decimal(n)} />
-            <VsAverage label="Share of house gain" value={s.shareOfHouseGain} avg={100 / total} max={houseMax((x) => x.shareOfHouseGain)} fmt={(n) => percent(n, 1)} />
+            <VsAverage label="Share of new followers" value={s.shareOfHouseGain} avg={100 / total} max={houseMax((x) => x.shareOfHouseGain)} fmt={(n) => percent(n, 1)} />
           </div>
         </Section>
       </div>
 
       {s.intraday.length >= 2 && (
-        <Section title="Last 48 hours" desc={<>Every ~15 minutes · <Delta value={s.gain24h} /> in 24 h · <Delta value={s.gain1h} /> in the last hour</>}>
+        <Section title="Last 48 hours" desc={
+            <>
+              Every ~15 minutes ·{" "}
+              {s.gain24h != null ? (
+                <><Delta value={s.gain24h} /> in 24 h</>
+              ) : (
+                <><Delta value={s.liveGain} /> since {istTime(s.intraday[0].t)} IST</>
+              )}
+              {s.gain1h != null && <> · <Delta value={s.gain1h} /> in the last hour</>}
+            </>
+          }>
           <AreaTrend data={s.intraday.map((p) => ({ date: p.t, value: p.followers }))} label="Followers" xFormat="time" withRange={false} height={220} />
         </Section>
       )}
@@ -152,15 +162,15 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Section title="Weekly gains" desc="Followers gained in each show week" className="lg:col-span-2">
-          <WeeklyBars stats={[toClient(s)]} slots={{ [c.id]: 0 }} weekLabels={a.weekLabels} height={240} />
+          <WeeklyBars stats={[toClient(s)]} slots={{ [c.id]: 0 }} weekLabels={a.weekLabels} height={240} hideEmpty />
         </Section>
         <Section title="Highlights">
           <dl className="space-y-2.5 text-sm">
             {[
               ["Best day", s.bestDay ? <><Delta value={s.bestDay.gain} /> · {shortDate(s.bestDay.date)}</> : "—"],
-              ["Worst day", s.worstDay ? <><Delta value={s.worstDay.gain} /> · {shortDate(s.worstDay.date)}</> : "—"],
+              ["Worst day", s.worstDay && s.series.filter((p) => p.gain != null).length > 1 ? <><Delta value={s.worstDay.gain} /> · {shortDate(s.worstDay.date)}</> : "—"],
               ["Days with growth", percent(s.positiveDaysPct, 0)],
-              ["Gained per post", compact(s.gainPerPost)],
+              ["Gained per post", s.gainPerPost == null ? "—" : full(s.gainPerPost)],
               ["Reels share", percent(s.reelsShare, 0)],
               ["Reels vs photos", reelLift == null ? "—" : <Delta value={reelLift} kind="percent" />],
               ["Usual posting day", s.seasonPosts.length ? WEEKDAYS[busiestDay] : "—"],
@@ -231,7 +241,7 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
           Compare {c.name.split(" ")[0]} with {(s.rank === 1 ? byRank[1] : byRank[0]).contestant.name.split(" ")[0]} →
         </Link>
       </div>
-      <p className="text-center text-xs text-muted">Season gain {signed(s.gainSeason)} · tracked for {s.daysTracked} days</p>
+      <p className="text-center text-xs text-muted">Gained {signed(s.gainSeason)} {a.growthSince} · tracked for {s.daysTracked} {s.daysTracked === 1 ? "day" : "days"}</p>
     </div>
   );
 }

@@ -93,7 +93,7 @@ export function Section({
           <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
           {desc && <p className="mt-0.5 text-sm text-muted">{desc}</p>}
         </div>
-        {action}
+        {action && <div className="min-w-0 max-w-full">{action}</div>}
       </div>
       {children}
     </section>

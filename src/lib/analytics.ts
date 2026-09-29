@@ -96,6 +96,8 @@ export interface ContestantStats {
   gain24h: number | null;
   /** Change over the last ~1 hour. */
   gain1h: number | null;
+  /** Change across the available 15-minute points in the last 24 h (works before a full day exists). */
+  liveGain: number | null;
   series: SeriesPoint[];
   seasonPosts: PostWithStats[];
 }
@@ -153,6 +155,9 @@ export interface HouseStats {
   gain24h: number | null;
   /** Combined followers at each collector run that covered every contestant. */
   intradayTotal: { t: string; followers: number }[];
+  /** Combined change across the live window, and the time it starts from. */
+  liveGain: number | null;
+  liveSince: string | null;
 }
 
 export interface Analytics {
@@ -228,8 +233,12 @@ export function computeAnalytics(ds: Dataset): Analytics {
     const worst = gains.reduce<(typeof gains)[number] | null>((b, p) => (!b || p.gain < b.gain ? p : b), null);
 
     const weeklyGain = weekLabels.map((_, w) => {
-      const start = valueOnOrBefore(series, addDays(premiere, 7 * w - 1));
-      const end = valueOnOrBefore(series, addDays(premiere, 7 * w + 6));
+      const weekStart = addDays(premiere, 7 * w);
+      const weekEnd = addDays(premiere, 7 * w + 6);
+      // Baseline = last snapshot before the week; if tracking began mid-week, its first snapshot
+      // (that week is then partial, flagged in the table).
+      const start = valueOnOrBefore(series, addDays(weekStart, -1)) ?? series.find((p) => p.date >= weekStart && p.date <= weekEnd);
+      const end = valueOnOrBefore(series, weekEnd);
       return start && end && end.date > start.date ? end.followers - start.followers : null;
     });
 
@@ -313,6 +322,7 @@ export function computeAnalytics(ds: Dataset): Analytics {
       intraday: intradayById.get(c.id) ?? [],
       gain24h: changeOver(intradayById.get(c.id) ?? [], 24),
       gain1h: changeOver(intradayById.get(c.id) ?? [], 1),
+      liveGain: windowChange(intradayById.get(c.id) ?? []),
       series,
       seasonPosts,
     };
@@ -364,9 +374,24 @@ export function computeAnalytics(ds: Dataset): Analytics {
       })),
       dailyPosts: dates.filter((d) => d >= premiere).map((date) => ({ date, posts: postsByDate.get(date) ?? 0 })),
       gain24h: sumOrNull(stats.map((s) => s.gain24h)),
+      ...(() => {
+        const pts = last24h(intradayTotals(ds.intraday ?? [], contestants.length));
+        return { liveGain: pts.length >= 2 ? pts.at(-1)!.followers - pts[0].followers : null, liveSince: pts.length >= 2 ? pts[0].t : null };
+      })(),
       intradayTotal: intradayTotals(ds.intraday ?? [], contestants.length),
     },
   };
+}
+
+/** Points within 24 hours of the latest one. */
+function last24h<T extends { t: string }>(pts: T[]): T[] {
+  const last = pts.at(-1);
+  return last ? pts.filter((p) => Date.parse(last.t) - Date.parse(p.t) <= 24 * 3600_000) : [];
+}
+
+function windowChange(pts: { t: string; followers: number }[]): number | null {
+  const w = last24h(pts);
+  return w.length >= 2 ? w.at(-1)!.followers - w[0].followers : null;
 }
 
 /** Sum followers per run time, keeping only runs that captured every contestant. */

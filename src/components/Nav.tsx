@@ -7,7 +7,8 @@ const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/contestants", label: "Contestants" },
   { href: "/compare", label: "Compare" },
-  { href: "/leaderboards", label: "Leaderboards" },
+  // Shorter label on phones so all four tabs fit without scrolling.
+  { href: "/leaderboards", label: "Leaderboards", short: "Rankings" },
 ];
 
 export function Nav() {
@@ -20,11 +21,18 @@ export function Nav() {
           <Link
             key={l.href}
             href={l.href}
-            className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+            className={`whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-colors sm:px-3.5 sm:text-sm ${
               active ? "bg-ink text-page" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
             }`}
           >
-            {l.label}
+            {"short" in l && l.short ? (
+              <>
+                <span className="sm:hidden">{l.short}</span>
+                <span className="hidden sm:inline">{l.label}</span>
+              </>
+            ) : (
+              l.label
+            )}
           </Link>
         );
       })}

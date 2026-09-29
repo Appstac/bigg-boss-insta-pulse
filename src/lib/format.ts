@@ -16,7 +16,10 @@ export function signed(n: number | null | undefined, fmt: (n: number) => string 
 
 export function percent(n: number | null | undefined, digits = 1, withSign = false): string {
   if (n == null || !isFinite(n)) return "—";
-  const s = Math.abs(n).toFixed(digits) + "%";
+  // Add decimals for small non-zero values so they never read as "0.0%" (e.g. 0.03% not 0.0%).
+  let d = digits;
+  while (n !== 0 && d < 3 && Number(Math.abs(n).toFixed(d)) === 0) d++;
+  const s = Math.abs(n).toFixed(d) + "%";
   if (!withSign) return (n < 0 ? "−" : "") + s;
   return n === 0 ? s : (n > 0 ? "+" : "−") + s;
 }
@@ -40,4 +43,17 @@ export function istTime(iso: string): string {
 export function istDateTime(iso: string): string {
   const d = new Date(iso);
   return `${d.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}, ${istTime(iso)} IST`;
+}
+
+/**
+ * Axis tick formatter for a value range: adds decimals when ticks would otherwise collapse to the
+ * same label (e.g. "62L 62L 62.1L" on a tight follower range).
+ */
+export function axisFormatter(min: number, max: number): (n: number) => string {
+  for (const digits of [1, 2, 3]) {
+    const fmt = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: digits });
+    const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => fmt.format(min + (max - min) * f));
+    if (new Set(ticks).size === ticks.length) return (n) => fmt.format(n);
+  }
+  return (n) => full(n);
 }

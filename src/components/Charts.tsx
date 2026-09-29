@@ -22,7 +22,7 @@ import {
 } from "recharts";
 import type { ClientStats } from "@/lib/analytics";
 import { seriesVar } from "@/lib/colors";
-import { compact, full, istDateTime, istTime, percent, shortDate, signed } from "@/lib/format";
+import { axisFormatter, compact, full, istDateTime, istTime, percent, shortDate, signed } from "@/lib/format";
 import { Avatar } from "./Avatar";
 import { TREND_RANGES, type TrendRange } from "./TrendChart";
 import { Segmented } from "./ui";
@@ -77,7 +77,11 @@ export function AreaTrend({
   const fmt = FORMATS[format];
   const xTick = xFormat === "time" ? istTime : shortDate;
   const xTitle = xFormat === "time" ? istDateTime : shortDate;
-  const rows = range === "all" ? data : data.slice(-Number(range) - 1);
+  const sliced = range === "all" ? data : data.slice(-Number(range) - 1);
+  // Time mode plots on a real clock axis, so a 6-hour gap looks like 6 hours, not one step.
+  const rows = xFormat === "time" ? sliced.map((r) => ({ ...r, ts: Date.parse(r.date) })) : sliced;
+  const values = rows.map((r) => r.value);
+  const yTick = axisFormatter(Math.min(...values), Math.max(...values));
   const id = "at-" + label.replace(/\W/g, "");
   return (
     <div>
@@ -95,8 +99,20 @@ export function AreaTrend({
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} />
-          <XAxis dataKey="date" tickFormatter={xTick} minTickGap={28} tickLine={false} />
-          <YAxis width={56} tickLine={false} axisLine={false} domain={["auto", "auto"]} tickFormatter={(v: number) => compact(v)} />
+          {xFormat === "time" ? (
+            <XAxis
+              dataKey="ts"
+              type="number"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
+              tickFormatter={(ms: number) => istTime(new Date(ms).toISOString())}
+              minTickGap={36}
+              tickLine={false}
+            />
+          ) : (
+            <XAxis dataKey="date" tickFormatter={xTick} minTickGap={28} tickLine={false} />
+          )}
+          <YAxis width={60} tickLine={false} axisLine={false} domain={["auto", "auto"]} tickFormatter={yTick} />
           {premiereDate && rows.some((r) => r.date === premiereDate) && (
             <ReferenceLine x={premiereDate} stroke="var(--axis)" strokeDasharray="4 4" label={{ value: "Premiere", position: "insideTopLeft", fontSize: 11 }} />
           )}
@@ -106,10 +122,20 @@ export function AreaTrend({
           <Tooltip
             cursor={{ stroke: "var(--axis)" }}
             content={({ active, payload, label: l }) =>
-              active && payload?.length ? <Tip title={xTitle(String(l))} rows={[{ label, value: fmt(Number(payload[0].value)) }]} /> : null
+              active && payload?.length ? (
+                <Tip
+                  title={xFormat === "time" ? istDateTime(new Date(Number(l)).toISOString()) : xTitle(String(l))}
+                  rows={[{ label, value: fmt(Number(payload[0].value)) }]}
+                />
+              ) : null
             }
           />
-          <Area dataKey="value" stroke="var(--series-1)" strokeWidth={2.25} fill={`url(#${id})`} dot={false} activeDot={{ r: 4.5, stroke: "var(--surface)", strokeWidth: 2 }} isAnimationActive={false} />
+          <Area
+            dataKey="value"
+            stroke="var(--series-1)"
+            strokeWidth={2.25}
+            fill={`url(#${id})`}
+            dot={rows.length <= 12 ? { r: 3, fill: "var(--series-1)", strokeWidth: 0 } : false} activeDot={{ r: 4.5, stroke: "var(--surface)", strokeWidth: 2 }} isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -182,12 +208,16 @@ export function GrowthEngagementScatter({
       full: s.contestant.name,
       evicted: s.contestant.status === "evicted",
     }));
+  // Small growth ranges (early in tracking) need decimals so ticks don't all read "0%".
+  const xs = data.map((d) => d.x);
+  const xRange = xs.length ? Math.max(...xs) - Math.min(...xs) : 0;
+  const xDigits = xRange < 0.5 ? 2 : xRange < 5 ? 1 : 0;
   return (
     <div>
       <ResponsiveContainer width="100%" height={380}>
         <ScatterChart margin={{ top: 16, right: 24, bottom: 16, left: 0 }}>
           <CartesianGrid />
-          <XAxis type="number" dataKey="x" name="Growth" tickFormatter={(v: number) => `${Math.round(v)}%`} tickLine={false} label={{ value: `Follower growth ${growthLabel} →`, position: "insideBottom", offset: -8, fontSize: 12 }} />
+          <XAxis type="number" dataKey="x" name="Growth" tickFormatter={(v: number) => `${v.toFixed(xDigits)}%`} tickLine={false} label={{ value: `Follower growth ${growthLabel} →`, position: "insideBottom", offset: -8, fontSize: 12 }} />
           <YAxis type="number" dataKey="y" name="Engagement" width={52} tickFormatter={(v: number) => `${v.toFixed(0)}%`} tickLine={false} axisLine={false} label={{ value: "Engagement rate →", angle: -90, position: "insideLeft", offset: 12, fontSize: 12 }} />
           <ZAxis type="number" dataKey="z" range={[80, 700]} />
           {avgX != null && <ReferenceLine x={avgX} stroke="var(--axis)" strokeDasharray="4 4" />}
@@ -272,12 +302,29 @@ export function RankHistory({ stats, slots, total, height = 280 }: { stats: Clie
 }
 
 /** Grouped weekly gain bars for a few contestants. */
-export function WeeklyBars({ stats, slots, weekLabels, height = 280 }: { stats: ClientStats[]; slots: Record<string, number>; weekLabels: string[]; height?: number }) {
-  const rows = weekLabels.map((w, i) => {
-    const r: Record<string, string | number | null> = { week: w };
-    for (const s of stats) r[s.contestant.id] = s.weeklyGain[i];
-    return r;
-  });
+export function WeeklyBars({
+  stats,
+  slots,
+  weekLabels,
+  height = 280,
+  hideEmpty = true,
+}: {
+  stats: ClientStats[];
+  slots: Record<string, number>;
+  weekLabels: string[];
+  height?: number;
+  /** Drop weeks nobody has data for (before tracking began). */
+  hideEmpty?: boolean;
+}) {
+  const rows = weekLabels
+    .map((w, i) => {
+      const r: Record<string, string | number | null> = { week: w };
+      for (const s of stats) r[s.contestant.id] = s.weeklyGain[i];
+      return { r, has: stats.some((s) => s.weeklyGain[i] != null) };
+    })
+    .filter((x) => !hideEmpty || x.has)
+    .map((x) => x.r);
+  if (!rows.length) return <p className="text-sm text-muted">Weekly totals appear after the second day of tracking.</p>;
   const names = new Map(stats.map((s) => [s.contestant.id, s.contestant.name]));
   return (
     <ResponsiveContainer width="100%" height={height}>
