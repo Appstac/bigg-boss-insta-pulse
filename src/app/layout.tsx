@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
-import { loadDataset } from "@/lib/data";
+import { dataVersion, loadDataset } from "@/lib/data";
+import { LiveRefresh } from "@/components/LiveRefresh";
 import { Nav } from "@/components/Nav";
 import { RelativeTime } from "@/components/RelativeTime";
 
@@ -20,13 +21,14 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { meta } = await loadDataset();
+  const [{ meta }, version] = await Promise.all([loadDataset(), dataVersion()]);
   const updated = meta.lastUpdated
     ? new Date(meta.lastUpdated).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" })
     : "never";
   return (
     <html lang="en" className={`${geist.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
+        <LiveRefresh version={version} />
         <header className="sticky top-0 z-30 border-b border-line bg-page/80 backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
             <Link href="/" className="flex items-center gap-2.5">

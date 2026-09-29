@@ -37,6 +37,11 @@ const currentDataSha = cache(async (): Promise<string | null> => {
   }
 });
 
+/** Version (data-branch commit) the current render is built from; null when reading local files. */
+export async function dataVersion(): Promise<string | null> {
+  return REMOTE && hasWriteAccess() ? currentDataSha() : null;
+}
+
 async function readLive<T>(file: string, fallback: T): Promise<T> {
   if (!REMOTE) return readLocal(file, fallback);
   try {
