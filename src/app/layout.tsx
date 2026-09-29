@@ -13,8 +13,11 @@ export const metadata: Metadata = {
   description: "Daily Instagram follower trends, posting activity and engagement for every Bigg Boss Telugu Season 10 contestant.",
 };
 
-/** Re-render with fresh data from the data branch at most every 10 minutes (must be a literal). */
-export const revalidate = 600;
+/**
+ * Pages re-render at most every 5 minutes (must be a literal). Data files are only re-downloaded when
+ * the data branch has a new commit, so a re-render without new data is cheap.
+ */
+export const revalidate = 300;
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const { meta } = await loadDataset();

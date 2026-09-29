@@ -25,9 +25,23 @@ function headers(extra: Record<string, string> = {}) {
   };
 }
 
-/** Raw file contents from the data branch, or null if missing. */
-export async function readDataFile(path: string, init: RequestInit & { next?: { revalidate?: number; tags?: string[] } } = {}) {
-  const res = await fetch(`https://api.github.com/repos/${repo()}/contents/${path}?ref=${DATA_BRANCH}`, {
+/** Latest commit sha of the data branch (one small API call). */
+export async function latestDataSha(init: RequestInit & { next?: { revalidate?: number; tags?: string[] } } = {}): Promise<string> {
+  const res = await fetch(`https://api.github.com/repos/${repo()}/commits/${DATA_BRANCH}`, {
+    ...init,
+    headers: headers({ accept: "application/vnd.github.sha" }),
+  });
+  if (!res.ok) throw new Error(`GitHub data sha: HTTP ${res.status}`);
+  return (await res.text()).trim();
+}
+
+/** Raw file contents from the data branch (or a specific commit via `ref`), or null if missing. */
+export async function readDataFile(
+  path: string,
+  init: RequestInit & { next?: { revalidate?: number; tags?: string[] } } = {},
+  ref: string = DATA_BRANCH,
+) {
+  const res = await fetch(`https://api.github.com/repos/${repo()}/contents/${path}?ref=${ref}`, {
     ...init,
     headers: headers({ accept: "application/vnd.github.raw" }),
   });

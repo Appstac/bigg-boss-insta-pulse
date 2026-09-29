@@ -1,7 +1,8 @@
 import "server-only";
+import { cache } from "react";
 import { readFileSync, existsSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { hasWriteAccess, readDataFile, repo, writeDataFile } from "./github";
+import { hasWriteAccess, latestDataSha, readDataFile, repo, writeDataFile } from "./github";
 import type { Contestant, Dataset, IntradayPoint, Meta, Post, Profile, Season, Snapshot } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -16,8 +17,8 @@ const DATA_BASE_URL =
   process.env.DATA_BASE_URL ?? (process.env.VERCEL && repo() ? `https://raw.githubusercontent.com/${repo()}/data` : "local");
 const REMOTE = DATA_BASE_URL !== "local";
 
-/** Seconds a fetched data file is reused before re-checking the data branch. */
-export const DATA_REVALIDATE = 600;
+/** Seconds between checks for a new data-branch commit (the collector publishes every ~15 min). */
+export const DATA_REVALIDATE = 60;
 /** Cache tag on every live-data fetch; admin edits expire it so changes show immediately. */
 export const LIVE_TAG = "live-data";
 
@@ -27,6 +28,15 @@ function readLocal<T>(file: string, fallback: T): T {
   return JSON.parse(readFileSync(p, "utf8")) as T;
 }
 
+/** One sha lookup per render, shared by every file read; the lookup itself is cached for 60 s. */
+const currentDataSha = cache(async (): Promise<string | null> => {
+  try {
+    return await latestDataSha({ next: { revalidate: DATA_REVALIDATE, tags: [LIVE_TAG] } });
+  } catch {
+    return null;
+  }
+});
+
 async function readLive<T>(file: string, fallback: T): Promise<T> {
   if (!REMOTE) return readLocal(file, fallback);
   try {
@@ -34,7 +44,12 @@ async function readLive<T>(file: string, fallback: T): Promise<T> {
     // With a token, read through the GitHub API (fresh, works for private repos); otherwise the
     // public raw URL (its CDN can lag a few minutes).
     if (hasWriteAccess()) {
-      const text = await readDataFile(file, { next });
+      // Files are read at a specific commit: that content never changes, so it is cached for good
+      // and only re-downloaded when the collector (or /admin) publishes a new commit.
+      const sha = await currentDataSha();
+      const text = sha
+        ? await readDataFile(file, { cache: "force-cache", next: { tags: [LIVE_TAG] } }, sha)
+        : await readDataFile(file, { next });
       return text == null ? readLocal(file, fallback) : (JSON.parse(text) as T);
     }
     const res = await fetch(`${DATA_BASE_URL}/${file}`, { next });
