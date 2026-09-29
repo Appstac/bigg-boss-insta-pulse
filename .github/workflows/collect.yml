@@ -1,0 +1,71 @@
+# Takes an Instagram snapshot every 15 minutes and publishes it to the `data` branch.
+# The site reads that branch directly (see src/lib/data.ts), so no redeploy is needed.
+# vercel.json disables deployments for `data`. GitHub may start scheduled runs a few
+# minutes late when its runners are busy.
+name: Instagram snapshot
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+    # Roster check (evictions / wildcards) every 6 hours; keep this string in sync with the step below.
+    - cron: "7 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 24 runs the TypeScript collector directly, so no npm install is needed.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Load current data from the data branch
+        run: |
+          mkdir -p live data/posts public/avatars
+          if git fetch --depth=1 origin data 2>/dev/null; then
+            echo "DATA_SHA=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_ENV"
+            git archive FETCH_HEAD | tar -x -C live
+            cp live/*.json data/
+            cp -r live/posts/. data/posts/ 2>/dev/null || true
+            cp -r live/avatars/. public/avatars/ 2>/dev/null || true
+          fi
+
+      - name: Check roster for evictions and wildcards
+        if: github.event.schedule == '7 */6 * * *' || github.event_name == 'workflow_dispatch'
+        # A failure here (source page down or redesigned) must not stop the collection.
+        run: node --no-warnings scripts/sync-roster.ts || echo "::warning::Roster check failed; roster unchanged"
+
+      - name: Collect
+        run: node --no-warnings scripts/collect.ts
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+
+      # The data branch holds only the latest files as a single commit (history lives inside
+      # snapshots.json), so it is force-pushed each run and the repo does not grow.
+      - name: Publish to the data branch
+        run: |
+          rm -rf out && mkdir -p out/avatars
+          cp data/contestants.json data/meta.json data/profiles.json data/snapshots.json data/intraday.json out/
+          cp -r data/posts out/posts
+          cp public/avatars/*.jpg out/avatars/ 2>/dev/null || true
+          cd out
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "data: $(TZ=Asia/Kolkata date '+%F %H:%M') IST"
+          # --force-with-lease: if /admin saved a roster change while this run was going, don't
+          # overwrite it; the next run will pick it up.
+          git push -q --force-with-lease=data:${DATA_SHA:-} "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data

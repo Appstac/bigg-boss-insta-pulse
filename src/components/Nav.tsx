@@ -1,0 +1,33 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const LINKS = [
+  { href: "/", label: "Dashboard" },
+  { href: "/contestants", label: "Contestants" },
+  { href: "/compare", label: "Compare" },
+  { href: "/leaderboards", label: "Leaderboards" },
+];
+
+export function Nav() {
+  const path = usePathname();
+  return (
+    <div className="-mx-1 flex gap-1 overflow-x-auto no-scrollbar">
+      {LINKS.map((l) => {
+        const active = l.href === "/" ? path === "/" : path.startsWith(l.href);
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              active ? "bg-ink text-page" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+            }`}
+          >
+            {l.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}

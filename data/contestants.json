@@ -1,0 +1,200 @@
+[
+  {
+    "id": "charan-mahadev",
+    "name": "Charan Mahadev",
+    "teluguName": "చరణ్ మహాదేవ్",
+    "profession": "Radio Jockey",
+    "status": "active",
+    "instagram": "charan_mahadev15",
+    "evictedOn": null,
+    "sourceSlug": "charan-mahadev",
+    "entryType": "original"
+  },
+  {
+    "id": "aman-masud",
+    "name": "Aman Masud",
+    "teluguName": "అమన్ మసూద్",
+    "profession": "Contestant",
+    "status": "active",
+    "instagram": "amanmasud_actor",
+    "evictedOn": null,
+    "sourceSlug": "aman-masud",
+    "entryType": "original"
+  },
+  {
+    "id": "rohit-patnam",
+    "name": "Rohit Patnam",
+    "teluguName": "రోహిత్ పట్నం",
+    "profession": "Contestant",
+    "status": "active",
+    "instagram": "rohitnaidupatnam.official",
+    "evictedOn": null,
+    "sourceSlug": "rohit-patnam",
+    "entryType": "original"
+  },
+  {
+    "id": "shalini-patel",
+    "name": "Shalini Patel",
+    "teluguName": "షాలిని పటేల్",
+    "profession": "Model",
+    "status": "active",
+    "instagram": "shaliniii_patell",
+    "evictedOn": null,
+    "sourceSlug": "shalini-patel",
+    "entryType": "original"
+  },
+  {
+    "id": "srishti-vyakaranam",
+    "name": "Srishti Vyakaranam",
+    "teluguName": "సృష్టి వ్యాకరణం",
+    "profession": "Model, Actor",
+    "status": "active",
+    "instagram": "srishtivyakaranam",
+    "evictedOn": null,
+    "sourceSlug": "srishti-vyakaranam",
+    "entryType": "original"
+  },
+  {
+    "id": "apoorva-tungaturthy",
+    "name": "Apoorva Tungaturthy",
+    "teluguName": "అపూర్వ తుంగతుర్తి",
+    "profession": "Model",
+    "status": "active",
+    "instagram": "miss_apoorva3",
+    "evictedOn": null,
+    "sourceSlug": "apoorva-tungaturthy",
+    "entryType": "wildcard"
+  },
+  {
+    "id": "gundeboina-jhansi",
+    "name": "Gundeboina Jhansi",
+    "teluguName": "గుండెబోయిన ఝాన్సీ",
+    "profession": "Singer",
+    "status": "active",
+    "instagram": "singer_jhansi",
+    "evictedOn": null,
+    "sourceSlug": "singer-jhansi",
+    "entryType": "original"
+  },
+  {
+    "id": "auto-ram-prasad",
+    "name": "Auto Ram Prasad",
+    "teluguName": "ఆటో రామ్ ప్రసాద్",
+    "profession": "Comedian, Actor",
+    "status": "active",
+    "instagram": "jabardasth_ramprasad",
+    "evictedOn": null,
+    "sourceSlug": "auto-ram-prasad",
+    "entryType": "original"
+  },
+  {
+    "id": "debjani-modak",
+    "name": "Debjani Modak",
+    "teluguName": "దేబ్జానీ మోదక్",
+    "profession": "Actress",
+    "status": "active",
+    "instagram": "debjanimodak",
+    "evictedOn": null,
+    "sourceSlug": "debjani-modak",
+    "entryType": "original"
+  },
+  {
+    "id": "mukesh-gowda",
+    "name": "Mukesh Gowda",
+    "teluguName": "ముకేష్ గౌడ",
+    "profession": "Television Actor, Model",
+    "status": "active",
+    "instagram": "_mukesh_gowda5",
+    "evictedOn": null,
+    "sourceSlug": "mukesh-gowda",
+    "entryType": "original"
+  },
+  {
+    "id": "potti-naresh",
+    "name": "Potti Naresh",
+    "teluguName": "పొట్టి నరేష్",
+    "profession": "Comedian, Actor",
+    "status": "active",
+    "instagram": "nareshjabardasth",
+    "evictedOn": null,
+    "sourceSlug": "potti-naresh",
+    "entryType": "original"
+  },
+  {
+    "id": "sudheer-kumar-reddy",
+    "name": "Sudheer Kumar Reddy",
+    "teluguName": "సుధీర్ కుమార్ రెడ్డి",
+    "profession": "Anchor, Digital Creator",
+    "status": "active",
+    "instagram": "sudheer_reddi",
+    "evictedOn": null,
+    "sourceSlug": "sudheer-kumar-reddy",
+    "entryType": "original"
+  },
+  {
+    "id": "temper-vamsi",
+    "name": "Temper Vamsi",
+    "teluguName": "టెంపర్ వంశీ",
+    "profession": "Actor",
+    "status": "active",
+    "instagram": "temper_vamsi",
+    "evictedOn": null,
+    "sourceSlug": "temper-vamsi",
+    "entryType": "original"
+  },
+  {
+    "id": "thrigun-adith-arun",
+    "name": "Thrigun Adith Arun",
+    "teluguName": "త్రిగున్ ఆదిత్ అరుణ్",
+    "profession": "Actor",
+    "status": "active",
+    "instagram": "thrigun_aactor",
+    "evictedOn": null,
+    "sourceSlug": "thrigun-adith-arun",
+    "entryType": "original"
+  },
+  {
+    "id": "varshini-sounderajan",
+    "name": "Varshini Sounderajan",
+    "teluguName": "వర్షిణి సౌందరాజన్",
+    "profession": "Actress, Model, Television Presenter",
+    "status": "active",
+    "instagram": "varshini_sounderajan",
+    "evictedOn": null,
+    "sourceSlug": "varshini-sounderajan",
+    "entryType": "original"
+  },
+  {
+    "id": "mithilesh-reddy",
+    "name": "Mithilesh Reddy",
+    "teluguName": "మిథిలేష్ రెడ్డి",
+    "profession": "Fitness Model",
+    "status": "evicted",
+    "instagram": "mithilesh_lifts",
+    "evictedOn": "2026-09-27",
+    "sourceSlug": "mithilesh-reddy",
+    "entryType": "wildcard"
+  },
+  {
+    "id": "alluri-krishna",
+    "name": "Alluri Krishna (Krishnudu)",
+    "teluguName": "అల్లూరి కృష్ణ (కృష్ణుడు)",
+    "profession": "Actor",
+    "status": "evicted",
+    "instagram": "krishnudu",
+    "evictedOn": "2026-09-20",
+    "sourceSlug": "alluri-krishna-krishnudu",
+    "entryType": "original"
+  },
+  {
+    "id": "chaithra-rai",
+    "name": "Chaithra Rai",
+    "teluguName": "చైత్ర రాయ్",
+    "profession": "Television Actress",
+    "status": "evicted",
+    "instagram": "chaithrarai17",
+    "evictedOn": "2026-09-13",
+    "sourceSlug": "chaithra-rai",
+    "entryType": "original"
+  }
+]
