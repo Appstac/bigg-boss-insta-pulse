@@ -161,7 +161,17 @@ export function DailyBars({
 }
 
 /** Engagement rate (y) vs follower growth since premiere (x); bubble size = followers. */
-export function GrowthEngagementScatter({ stats, avgX, avgY }: { stats: ClientStats[]; avgX: number | null; avgY: number | null }) {
+export function GrowthEngagementScatter({
+  stats,
+  avgX,
+  avgY,
+  growthLabel = "since premiere",
+}: {
+  stats: ClientStats[];
+  avgX: number | null;
+  avgY: number | null;
+  growthLabel?: string;
+}) {
   const data = stats
     .filter((s) => s.pctSeason != null && s.engagementRate != null)
     .map((s) => ({
@@ -177,7 +187,7 @@ export function GrowthEngagementScatter({ stats, avgX, avgY }: { stats: ClientSt
       <ResponsiveContainer width="100%" height={380}>
         <ScatterChart margin={{ top: 16, right: 24, bottom: 16, left: 0 }}>
           <CartesianGrid />
-          <XAxis type="number" dataKey="x" name="Growth" tickFormatter={(v: number) => `${Math.round(v)}%`} tickLine={false} label={{ value: "Follower growth since premiere →", position: "insideBottom", offset: -8, fontSize: 12 }} />
+          <XAxis type="number" dataKey="x" name="Growth" tickFormatter={(v: number) => `${Math.round(v)}%`} tickLine={false} label={{ value: `Follower growth ${growthLabel} →`, position: "insideBottom", offset: -8, fontSize: 12 }} />
           <YAxis type="number" dataKey="y" name="Engagement" width={52} tickFormatter={(v: number) => `${v.toFixed(0)}%`} tickLine={false} axisLine={false} label={{ value: "Engagement rate →", angle: -90, position: "insideLeft", offset: 12, fontSize: 12 }} />
           <ZAxis type="number" dataKey="z" range={[80, 700]} />
           {avgX != null && <ReferenceLine x={avgX} stroke="var(--axis)" strokeDasharray="4 4" />}
@@ -191,7 +201,7 @@ export function GrowthEngagementScatter({ stats, avgX, avgY }: { stats: ClientSt
                 <Tip
                   title={p.full}
                   rows={[
-                    { label: "Growth since premiere", value: percent(p.x, 1, true) },
+                    { label: `Growth ${growthLabel}`, value: percent(p.x, 1, true) },
                     { label: "Engagement rate", value: percent(p.y, 2) },
                     { label: "Followers", value: compact(p.z) },
                   ]}

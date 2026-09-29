@@ -27,6 +27,11 @@ export const TREND_RANGES: { value: TrendRange; label: string }[] = [
   { value: "all", label: "All" },
 ];
 
+/** Trend switch options; the growth label follows the follower baseline (see Analytics.growthSince). */
+export function trendModes(growthLabel = "since premiere"): { value: TrendMode; label: string }[] {
+  return TREND_MODES.map((m) => (m.value === "indexed" ? { ...m, label: `Growth % ${growthLabel}` } : m));
+}
+
 export const TREND_MODES: { value: TrendMode; label: string }[] = [
   { value: "followers", label: "Followers" },
   { value: "indexed", label: "Growth % since premiere" },

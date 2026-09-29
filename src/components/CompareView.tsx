@@ -8,7 +8,7 @@ import type { ClientStats } from "@/lib/analytics";
 import { assignSlots, MAX_SERIES, seriesVar } from "@/lib/colors";
 import { compact, decimal, full, percent, shortDate, signed } from "@/lib/format";
 import { ContestantPicker } from "./ContestantPicker";
-import { TREND_MODES, TREND_RANGES, TrendChart, type TrendMode, type TrendRange } from "./TrendChart";
+import { TREND_RANGES, trendModes, TrendChart, type TrendMode, type TrendRange } from "./TrendChart";
 import { Avatar } from "./Avatar";
 import { RankHistory, WeeklyBars } from "./Charts";
 import { Sparkline } from "./Sparkline";
@@ -84,7 +84,19 @@ const RADAR: { label: string; get: (s: ClientStats) => number | null }[] = [
   { label: "Posts/day", get: (s) => s.postsPerDay },
 ];
 
-export function CompareView({ stats, initial, premiereDate, weekLabels }: { stats: ClientStats[]; initial: string[]; premiereDate: string; weekLabels: string[] }) {
+export function CompareView({
+  stats,
+  initial,
+  premiereDate,
+  weekLabels,
+  growthLabel = "since premiere",
+}: {
+  stats: ClientStats[];
+  initial: string[];
+  premiereDate: string;
+  weekLabels: string[];
+  growthLabel?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [selected, setSelected] = useState(initial);
@@ -207,7 +219,9 @@ export function CompareView({ stats, initial, premiereDate, weekLabels }: { stat
                           : m.higherIsBetter ? Math.max(...valid) : Math.min(...valid);
                       return (
                         <tr key={m.label} className="border-b border-line last:border-0 hover:bg-surface-2">
-                          <td className="py-2 pr-4 text-ink-2" title={m.hint}>{m.label}</td>
+                          <td className="py-2 pr-4 text-ink-2" title={m.hint}>
+                            {m.label.startsWith("Posts") ? m.label : m.label.replace("since premiere", growthLabel)}
+                          </td>
                           {chosen.map((s, i) => {
                             const lead = best != null && vals[i] === best;
                             return (
@@ -236,7 +250,7 @@ export function CompareView({ stats, initial, premiereDate, weekLabels }: { stat
             title="Follower trend"
             action={
               <div className="flex flex-wrap gap-2">
-                <Segmented value={mode} options={TREND_MODES} onChange={setMode} />
+                <Segmented value={mode} options={trendModes(growthLabel)} onChange={setMode} />
                 <Segmented value={range} options={TREND_RANGES} onChange={setRange} />
               </div>
             }

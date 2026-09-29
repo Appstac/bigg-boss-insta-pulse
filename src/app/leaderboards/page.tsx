@@ -15,12 +15,12 @@ interface Board {
   asc?: boolean;
 }
 
-const BOARDS: Board[] = [
+const boards = (growthSince: string): Board[] => [
   { title: "Most followers", desc: "Current follower count", get: (s) => s.followers, fmt: compact },
   { title: "Biggest gain today", desc: "Change since yesterday's snapshot", get: (s) => s.gain1d, fmt: (n) => signed(n) },
   { title: "Biggest gain this week", desc: "Last 7 days", get: (s) => s.gain7d, fmt: (n) => signed(n) },
-  { title: "Biggest gain this season", desc: "Since premiere", get: (s) => s.gainSeason, fmt: (n) => signed(n) },
-  { title: "Fastest growing", desc: "Growth % since premiere", get: (s) => s.pctSeason, fmt: (n) => percent(n, 1, true) },
+  { title: "Biggest gain this season", desc: growthSince[0].toUpperCase() + growthSince.slice(1), get: (s) => s.gainSeason, fmt: (n) => signed(n) },
+  { title: "Fastest growing", desc: `Growth % ${growthSince}`, get: (s) => s.pctSeason, fmt: (n) => percent(n, 1, true) },
   { title: "Hottest momentum", desc: "This week's gain vs last week's", get: (s) => s.momentum, fmt: (n) => percent(n, 0, true) },
   { title: "Highest engagement rate", desc: "Median (likes + comments) ÷ followers per post", get: (s) => s.engagementRate, fmt: (n) => percent(n, 2) },
   { title: "Most likes per post", desc: "Average this season", get: (s) => s.avgLikes, fmt: compact },
@@ -40,7 +40,7 @@ export default async function Leaderboards() {
         <p className="text-sm text-muted">Top 5 contestants in each category.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {BOARDS.map((b) => {
+        {boards(a.growthSince).map((b) => {
           const rows = a.stats
             .filter((s) => b.get(s) != null)
             .sort((x, y) => (b.asc ? b.get(x)! - b.get(y)! : b.get(y)! - b.get(x)!))

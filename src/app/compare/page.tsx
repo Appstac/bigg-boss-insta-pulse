@@ -23,7 +23,7 @@ export default async function ComparePage(props: PageProps<"/compare">) {
         <h1 className="mt-1 text-3xl font-bold tracking-tight">Compare contestants</h1>
         <p className="text-sm text-muted">Side-by-side Instagram numbers. The link updates as you pick, so you can share it.</p>
       </div>
-      <CompareView stats={stats} initial={initial} premiereDate={ds.season.premiereDate} weekLabels={a.weekLabels} />
+      <CompareView stats={stats} initial={initial} premiereDate={ds.season.premiereDate} weekLabels={a.weekLabels} growthLabel={a.growthSince} />
     </div>
   );
 }

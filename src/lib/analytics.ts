@@ -1,3 +1,4 @@
+import { shortDate } from "./format";
 import type { Contestant, Dataset, Post, Snapshot } from "./types";
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -162,6 +163,11 @@ export interface Analytics {
   seasonDay: number | null;
   /** Latest 15-minute run time, if intraday data exists. */
   latestRun: string | null;
+  /**
+   * "since premiere", or "since 29 Sept" when tracking began after the premiere (Instagram has no
+   * follower history, so growth can only be measured from the first snapshot).
+   */
+  growthSince: string;
   house: HouseStats;
 }
 
@@ -283,7 +289,12 @@ export function computeAnalytics(ds: Dataset): Analytics {
       postsSeason,
       postsLast7d,
       postsPerDay: seasonDays ? postsSeason / seasonDays : null,
-      gainPerPost: gainSeason != null && postsSeason ? gainSeason / postsSeason : null,
+      gainPerPost: (() => {
+        // Same window for both sides: posts published since the follower baseline snapshot.
+        const since = baseline && baseline.date > premiere ? baseline.date : premiere;
+        const n = seasonPosts.filter((p) => istDate(p.timestamp) >= since).length;
+        return gainSeason != null && n ? gainSeason / n : null;
+      })(),
       avgLikes: mean(liked.map((p) => p.likes!)),
       medianLikes: median(liked.map((p) => p.likes!)),
       avgComments: mean(seasonPosts.map((p) => p.comments)),
@@ -329,6 +340,7 @@ export function computeAnalytics(ds: Dataset): Analytics {
     dates,
     weekLabels,
     seasonDay: latestDate && latestDate >= premiere ? daysBetween(premiere, latestDate) + 1 : null,
+    growthSince: !dates[0] || dates[0] <= premiere ? "since premiere" : `since ${shortDate(dates[0])}`,
     latestRun: [...(ds.intraday ?? [])].map((p) => p.t).sort().at(-1) ?? null,
     house: {
       totalFollowers: stats.reduce((a, s) => a + s.followers, 0),

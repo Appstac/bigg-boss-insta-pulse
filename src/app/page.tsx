@@ -80,7 +80,7 @@ export default async function Dashboard() {
           aside={<Sparkline values={house.dailyTotal.slice(-14).map((d) => d.followers)} width={88} height={34} />}
         />
         <StatTile icon={<Icon name="trend" />} label="Gained this week" value={<Delta value={house.gain7d} />} sub={`Avg ${compact(house.avgGain7d)} per contestant`} />
-        <StatTile icon={<Icon name="star" />} label="Gained since premiere" value={<Delta value={house.gainSeason} />} sub={`Avg growth ${percent(house.avgPctSeason, 1)}`} />
+        <StatTile icon={<Icon name="star" />} label={`Gained ${a.growthSince}`} value={<Delta value={house.gainSeason} />} sub={`Avg growth ${percent(house.avgPctSeason, 1)}`} />
         <StatTile icon={<Icon name="heart" />} label="Likes + comments" value={compact(house.totalInteractions)} sub={`${house.postsSeason} posts · typical engagement ${percent(house.avgEngagement, 1)}`} />
       </div>
 
@@ -163,9 +163,9 @@ export default async function Dashboard() {
       <SectionHeading id="contestants" eyebrow="All contestants" title="The house at a glance" desc="Tap a card for the full profile, or press + on several cards to compare them." />
       <ContestantGrid stats={client} />
 
-      <SectionHeading id="trends" eyebrow="Trends" title="Follower trend" desc="Pick up to 6 contestants and switch between follower count, % growth since premiere and daily gain." />
+      <SectionHeading id="trends" eyebrow="Trends" title="Follower trend" desc={`Pick up to 6 contestants and switch between follower count, % growth ${a.growthSince} and daily gain.`} />
       <section className="card p-4 sm:p-5">
-        <TrendPanel stats={client} initial={defaultTrend} premiereDate={ds.season.premiereDate} />
+        <TrendPanel growthLabel={a.growthSince} stats={client} initial={defaultTrend} premiereDate={ds.season.premiereDate} />
       </section>
 
       <SectionHeading id="growth" eyebrow="Growth" title="Who is growing, and when" />
@@ -191,7 +191,7 @@ export default async function Dashboard() {
         </Section>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Section title="Fastest growing" desc="% growth since premiere: fairer to smaller accounts">
+        <Section title="Fastest growing" desc={`% growth ${a.growthSince}: fairer to smaller accounts`}>
           <RankedBars stats={stats} get={(s) => s.pctSeason} fmt={(n) => percent(n, 1, true)} sub={(s) => compact(s.followers)} limit={8} />
         </Section>
         <Section title="Momentum" desc="This week's gain vs last week's">
@@ -201,7 +201,7 @@ export default async function Dashboard() {
 
       <SectionHeading id="engagement" eyebrow="Engagement" title="Who converts attention into interaction" desc="Engagement rate = median (likes + comments) ÷ followers per post since premiere. Median, so one viral collab reel doesn't distort it." />
       <Section title="Growth vs engagement" desc="Every contestant on one map">
-        <GrowthEngagementScatter stats={client} avgX={house.avgPctSeason} avgY={house.avgEngagement} />
+        <GrowthEngagementScatter growthLabel={a.growthSince} stats={client} avgX={house.avgPctSeason} avgY={house.avgEngagement} />
       </Section>
       <div className="grid gap-4 lg:grid-cols-3">
         <Section title="Engagement rate">
@@ -210,7 +210,7 @@ export default async function Dashboard() {
         <Section title="Avg likes per post">
           <RankedBars stats={stats} get={(s) => s.avgLikes} fmt={compact} limit={8} />
         </Section>
-        <Section title="Followers gained per post" desc="Season gain ÷ posts since premiere">
+        <Section title="Followers gained per post" desc={`Followers gained ${a.growthSince} ÷ posts in that time`}>
           <RankedBars stats={stats} get={(s) => s.gainPerPost} fmt={compact} sub={(s) => `${s.postsSeason} posts`} limit={8} />
         </Section>
       </div>
@@ -227,7 +227,7 @@ export default async function Dashboard() {
 
       <div id="table">
         <Section title="Full data table" desc="Click a column to sort. Tick rows and press Compare.">
-          <LeaderboardTable stats={client} />
+          <LeaderboardTable stats={client} growthLabel={a.growthSince} />
         </Section>
       </div>
     </div>

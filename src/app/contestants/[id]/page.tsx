@@ -111,7 +111,7 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile icon={<Icon name="rank" />} label="Rank by followers" value={`#${s.rank}`} sub={<>of {total} · 7d <RankChange value={s.rankChange7d} /></>} />
         <StatTile icon={<Icon name="trend" />} label="Last 7 days" value={<Delta value={s.gain7d} />} sub={<><Delta value={s.pct7d} kind="percent" /> · #{rankOf((x) => x.gain7d)} in house</>} />
-        <StatTile icon={<Icon name="star" />} label="Since premiere" value={<Delta value={s.gainSeason} />} sub={<><Delta value={s.pctSeason} kind="percent" /> · #{rankOf((x) => x.gainSeason)} in house</>} />
+        <StatTile icon={<Icon name="star" />} label={a.growthSince[0].toUpperCase() + a.growthSince.slice(1)} value={<Delta value={s.gainSeason} />} sub={<><Delta value={s.pctSeason} kind="percent" /> · #{rankOf((x) => x.gainSeason)} in house</>} />
         <StatTile icon={<Icon name="bolt" />} label="Momentum" value={<Delta value={s.momentum} kind="percent" />} sub="This week vs last week" />
         <StatTile icon={<Icon name="calendar" />} label="Projected in 7 days" value={compact(s.projected7d)} sub={`At ${compact(s.avgDailyGain7d)}/day recent pace`} />
         <StatTile icon={<Icon name="heart" />} label="Engagement rate" value={percent(s.engagementRate, 2)} sub={`#${rankOf((x) => x.engagementRate)} of ${total} · per post`} />
@@ -125,7 +125,7 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
         </Section>
         <Section title="Compared with the house" desc="Bar = this contestant · tick = house average">
           <div className="space-y-5">
-            <VsAverage label="Growth since premiere" value={s.pctSeason} avg={houseAvg((x) => x.pctSeason)} max={houseMax((x) => x.pctSeason)} fmt={(n) => percent(n, 1)} />
+            <VsAverage label={`Growth ${a.growthSince}`} value={s.pctSeason} avg={houseAvg((x) => x.pctSeason)} max={houseMax((x) => x.pctSeason)} fmt={(n) => percent(n, 1)} />
             <VsAverage label="Gain last 7 days" value={s.gain7d} avg={houseAvg((x) => x.gain7d)} max={houseMax((x) => x.gain7d)} fmt={compact} />
             <VsAverage label="Engagement rate" value={s.engagementRate} avg={houseAvg((x) => x.engagementRate)} max={houseMax((x) => x.engagementRate)} fmt={(n) => percent(n, 2)} />
             <VsAverage label="Avg likes / post" value={s.avgLikes} avg={houseAvg((x) => x.avgLikes)} max={houseMax((x) => x.avgLikes)} fmt={compact} />

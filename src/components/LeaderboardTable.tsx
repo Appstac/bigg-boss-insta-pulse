@@ -33,7 +33,7 @@ const COLUMNS: { key: Key; label: string; title: string; render: (s: ClientStats
 
 type Filter = "all" | "active" | "evicted";
 
-export function LeaderboardTable({ stats }: { stats: ClientStats[] }) {
+export function LeaderboardTable({ stats, growthLabel = "since premiere" }: { stats: ClientStats[]; growthLabel?: string }) {
   const [sort, setSort] = useState<{ key: Key; dir: 1 | -1 }>({ key: "followers", dir: -1 });
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
@@ -92,7 +92,7 @@ export function LeaderboardTable({ stats }: { stats: ClientStats[] }) {
               <th className="py-2 pr-4">Contestant</th>
               <th className="py-2 pr-2">14 days</th>
               {COLUMNS.map((c) => (
-                <th key={c.key} className="py-2 pl-3 text-right" title={c.title}>
+                <th key={c.key} className="py-2 pl-3 text-right" title={c.key === "gainSeason" || c.key === "pctSeason" ? c.title.replace("since premiere", growthLabel) : c.title}>
                   <button
                     onClick={() => setSort((s) => ({ key: c.key, dir: s.key === c.key ? (-s.dir as 1 | -1) : -1 }))}
                     className={`uppercase hover:text-ink ${sort.key === c.key ? "text-ink" : ""}`}
