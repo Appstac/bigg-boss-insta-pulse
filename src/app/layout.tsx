@@ -53,10 +53,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <nav className="order-last w-full sm:order-none sm:w-auto">
               <Nav />
             </nav>
-            <div className="ml-auto flex items-center gap-3">
-              <span className="flex items-center gap-2 text-xs text-muted">
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <span className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted">
                 <span className="live-dot h-2 w-2 rounded-full bg-[var(--up)]" aria-hidden />
-                Updated {meta.lastUpdated ? <RelativeTime iso={meta.lastUpdated} absolute={updated} /> : "never"}
+                <span className="hidden sm:inline">Updated</span>
+                {meta.lastUpdated ? <RelativeTime iso={meta.lastUpdated} absolute={updated} /> : "never"}
               </span>
               <ThemeToggle />
             </div>

@@ -8,7 +8,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  LabelList,
   Line,
   LineChart,
   ReferenceLine,
@@ -18,7 +17,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  ZAxis,
 } from "recharts";
 import type { ClientStats } from "@/lib/analytics";
 import { seriesVar } from "@/lib/colors";
@@ -186,7 +184,10 @@ export function DailyBars({
   );
 }
 
-/** Engagement rate (y) vs follower growth since premiere (x); bubble size = followers. */
+/**
+ * Engagement rate (y) vs follower growth (x). Each contestant is drawn as their photo; names are
+ * only drawn where they don't collide with another name (tap a photo for the full details).
+ */
 export function GrowthEngagementScatter({
   stats,
   avgX,
@@ -200,55 +201,127 @@ export function GrowthEngagementScatter({
 }) {
   const data = stats
     .filter((s) => s.pctSeason != null && s.engagementRate != null)
+    // Bigger accounts first, so they win label space when names would collide.
+    .sort((a, b) => b.followers - a.followers)
     .map((s) => ({
+      id: s.contestant.id,
       x: s.pctSeason!,
       y: s.engagementRate!,
-      z: s.followers,
+      followers: s.followers,
+      photo: s.photo,
       name: s.contestant.name.split(" ")[0],
       full: s.contestant.name,
       evicted: s.contestant.status === "evicted",
     }));
+  type Pt = (typeof data)[number];
   // Small growth ranges (early in tracking) need decimals so ticks don't all read "0%".
   const xs = data.map((d) => d.x);
   const xRange = xs.length ? Math.max(...xs) - Math.min(...xs) : 0;
   const xDigits = xRange < 0.5 ? 2 : xRange < 5 ? 1 : 0;
+
+  const R = 13;
+  // Decide which names fit before drawing: greedy collision check on label boxes, sized for a
+  // phone-width plot (~300 x 360 px), so wider screens only ever show more room, not overlaps.
+  const labelled = (() => {
+    const W = 300;
+    const H = 360;
+    const ys = data.map((d) => d.y);
+    const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+    const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
+    const px = (v: number) => ((v - x0) / (x1 - x0 || 1)) * W;
+    const py = (v: number) => (1 - (v - y0) / (y1 - y0 || 1)) * H;
+    const boxes: { a: number; b: number; c: number; d: number }[] = [];
+    const ok = new Set<string>();
+    for (const p of data) {
+      const bx = px(p.x) + R + 3;
+      const box = { a: bx, b: py(p.y) - 7, c: bx + p.name.length * 6.4 + 4, d: py(p.y) + 7 };
+      if (!boxes.some((o) => box.a < o.c && box.c > o.a && box.b < o.d && box.d > o.b)) {
+        boxes.push(box);
+        ok.add(p.id);
+      }
+    }
+    return ok;
+  })();
+
+  const renderDot = ({ cx = 0, cy = 0, payload }: { cx?: number; cy?: number; payload?: Pt }) => {
+    if (!payload) return <g />;
+    const clip = `sc-${payload.id}`;
+    const free = labelled.has(payload.id);
+    return (
+      <g style={{ cursor: "pointer" }} opacity={payload.evicted ? 0.6 : 1}>
+        <circle cx={cx} cy={cy} r={R + 5} fill="transparent" />
+        <clipPath id={clip}>
+          <circle cx={cx} cy={cy} r={R} />
+        </clipPath>
+        <circle cx={cx} cy={cy} r={R} fill="var(--surface-3)" />
+        {payload.photo ? (
+          <image href={payload.photo} x={cx - R} y={cy - R} width={R * 2} height={R * 2} clipPath={`url(#${clip})`} preserveAspectRatio="xMidYMid slice" />
+        ) : (
+          <text x={cx} y={cy + 4} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--ink-2)">
+            {payload.name.slice(0, 2).toUpperCase()}
+          </text>
+        )}
+        <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--series-1)" strokeWidth={2} />
+        {free && (
+          <text x={cx + R + 3} y={cy + 4} fontSize={11} fill="var(--ink-2)">
+            {payload.name}
+          </text>
+        )}
+      </g>
+    );
+  };
+
   return (
     <div>
-      <ResponsiveContainer width="100%" height={380}>
-        <ScatterChart margin={{ top: 16, right: 24, bottom: 16, left: 0 }}>
+      <ResponsiveContainer width="100%" height={420}>
+        <ScatterChart margin={{ top: 20, right: 56, bottom: 20, left: 0 }}>
           <CartesianGrid />
-          <XAxis type="number" dataKey="x" name="Growth" tickFormatter={(v: number) => `${v.toFixed(xDigits)}%`} tickLine={false} label={{ value: `Follower growth ${growthLabel} →`, position: "insideBottom", offset: -8, fontSize: 12 }} />
-          <YAxis type="number" dataKey="y" name="Engagement" width={52} tickFormatter={(v: number) => `${v.toFixed(0)}%`} tickLine={false} axisLine={false} label={{ value: "Engagement rate →", angle: -90, position: "insideLeft", offset: 12, fontSize: 12 }} />
-          <ZAxis type="number" dataKey="z" range={[80, 700]} />
+          <XAxis
+            type="number"
+            dataKey="x"
+            name="Growth"
+            domain={["auto", "auto"]}
+            tickFormatter={(v: number) => `${v.toFixed(xDigits)}%`}
+            tickLine={false}
+            label={{ value: `Follower growth ${growthLabel} →`, position: "insideBottom", offset: -12, fontSize: 12 }}
+          />
+          <YAxis
+            type="number"
+            dataKey="y"
+            name="Engagement"
+            width={52}
+            tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+            tickLine={false}
+            axisLine={false}
+            label={{ value: "Engagement rate →", angle: -90, position: "insideLeft", offset: 12, fontSize: 12 }}
+          />
           {avgX != null && <ReferenceLine x={avgX} stroke="var(--axis)" strokeDasharray="4 4" />}
           {avgY != null && <ReferenceLine y={avgY} stroke="var(--axis)" strokeDasharray="4 4" />}
           <Tooltip
             cursor={false}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
-              const p = payload[0].payload as (typeof data)[number];
+              const p = payload[0].payload as Pt;
               return (
                 <Tip
                   title={p.full}
                   rows={[
                     { label: `Growth ${growthLabel}`, value: percent(p.x, 1, true) },
                     { label: "Engagement rate", value: percent(p.y, 2) },
-                    { label: "Followers", value: compact(p.z) },
+                    { label: "Followers", value: compact(p.followers) },
                   ]}
                 />
               );
             }}
           />
-          <Scatter data={data} fill="var(--series-1)" fillOpacity={0.55} stroke="var(--series-1)" strokeWidth={1.5} isAnimationActive={false}>
-            <LabelList dataKey="name" position="top" offset={8} style={{ fill: "var(--ink-2)", fontSize: 11 }} />
-          </Scatter>
+          <Scatter data={data} shape={(p: unknown) => renderDot(p as { cx?: number; cy?: number; payload?: Pt })} isAnimationActive={false} />
         </ScatterChart>
       </ResponsiveContainer>
       <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-muted sm:grid-cols-4">
         <span>↗ Top right: growing fast and engaging</span>
         <span>↖ Top left: loyal fans, slower growth</span>
         <span>↘ Bottom right: growing on reach, weaker interaction</span>
-        <span>Dashed lines = house averages · bubble = follower count</span>
+        <span>Dashed lines = house averages · tap a photo for details</span>
       </div>
     </div>
   );
