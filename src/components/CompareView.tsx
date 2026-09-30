@@ -174,18 +174,22 @@ export function CompareView({
               <FragmentWithVs key={s.contestant.id} vs={two && i === 1}>
                 <Link href={`/contestants/${s.contestant.id}`} className="card relative flex min-w-0 flex-col items-center overflow-hidden p-3 text-center transition-transform hover:-translate-y-0.5 sm:p-5">
                   <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: seriesVar(slots[s.contestant.id]) }} />
-                  {wins.get(s.contestant.id) === topWins && topWins > 0 && (
-                    <span className="absolute right-2 top-3 rounded-full bg-up-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-up">Leads</span>
-                  )}
                   <Avatar name={s.contestant.name} photo={s.photo} size={two ? 80 : 64} rounded="xl" evicted={s.contestant.status === "evicted"} ring={seriesVar(slots[s.contestant.id])} />
                   <div className="mt-3 font-semibold leading-tight">{s.contestant.name}</div>
                   <div className="text-xs text-muted">{s.contestant.status === "evicted" ? "Evicted" : "In house"} · Rank #{s.rank}</div>
                   <div className="tnum mt-3 text-2xl font-bold tracking-tight">{compact(s.followers)}</div>
                   <Delta value={s.gain1d} pill className="mt-1" />
                   <Sparkline values={s.sparkline} width={100} height={30} className="mt-3 max-w-full" />
-                  <div className="mt-3 text-xs text-muted">
-                    Leads <strong className="text-ink">{wins.get(s.contestant.id)}</strong> of {contested} metrics
-                  </div>
+                  {/* The overall leader gets a highlighted pill here (in the flow, so it never covers the photo). */}
+                  {wins.get(s.contestant.id) === topWins && topWins > 0 ? (
+                    <div className="mt-3 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-up-bg px-2.5 py-1 text-xs font-semibold text-up">
+                      <span aria-hidden>🏆</span> Leads {wins.get(s.contestant.id)} of {contested}<span className="hidden sm:inline"> metrics</span>
+                    </div>
+                  ) : (
+                    <div className="mt-3 whitespace-nowrap px-2.5 py-1 text-xs text-muted">
+                      Leads <strong className="text-ink">{wins.get(s.contestant.id)}</strong> of {contested}<span className="hidden sm:inline"> metrics</span>
+                    </div>
+                  )}
                 </Link>
               </FragmentWithVs>
             ))}
