@@ -77,7 +77,7 @@ export async function addContestant(_: ActionState, form: FormData): Promise<Act
       addedOn: todayIST(),
     });
     const note = await saveAndRefresh(roster, `roster: add ${name} (@${ig.username})`, true);
-    return { ok: true, message: `Added ${name} (@${ig.username}, ${ig.followers.toLocaleString("en-IN")} followers). ${note}` };
+    return { ok: true, message: `Added ${name} (@${ig.username}, ${ig.followers.toLocaleString("en-US")} followers). ${note}` };
   } catch (e) {
     return { error: (e as Error).message };
   }

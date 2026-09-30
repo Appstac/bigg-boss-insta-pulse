@@ -135,7 +135,7 @@ export function SetupFlow({ defaultAppId, testUsername }: { defaultAppId: string
         <div className="space-y-2">
           <p className="font-semibold text-up">✓ Connected and saved to .env.local</p>
           <p className="text-sm text-ink-2">
-            Test lookup worked: <strong>@{state.username}</strong> has {state.followers.toLocaleString("en-IN")} followers.
+            Test lookup worked: <strong>@{state.username}</strong> has {state.followers.toLocaleString("en-US")} followers.
           </p>
           <p className="text-sm text-ink-2">
             Token expires:{" "}

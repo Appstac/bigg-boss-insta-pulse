@@ -1,11 +1,14 @@
+/** International short form: 950, 12.4K, 931K, 1.85M (two decimals for millions, none from 100K). */
 export function compact(n: number | null | undefined): string {
   if (n == null) return "—";
-  return new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+  const a = Math.abs(n);
+  const digits = a >= 1_000_000 ? 2 : a >= 100_000 ? 0 : 1;
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: digits }).format(n);
 }
 
 export function full(n: number | null | undefined): string {
   if (n == null) return "—";
-  return new Intl.NumberFormat("en-IN").format(Math.round(n));
+  return new Intl.NumberFormat("en-US").format(Math.round(n));
 }
 
 export function signed(n: number | null | undefined, fmt: (n: number) => string = compact): string {
@@ -51,7 +54,7 @@ export function istDateTime(iso: string): string {
  */
 export function axisFormatter(min: number, max: number): (n: number) => string {
   for (const digits of [1, 2, 3]) {
-    const fmt = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: digits });
+    const fmt = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: digits });
     const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => fmt.format(min + (max - min) * f));
     if (new Set(ticks).size === ticks.length) return (n) => fmt.format(n);
   }

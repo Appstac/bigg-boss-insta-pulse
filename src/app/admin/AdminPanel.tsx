@@ -80,7 +80,7 @@ function RosterRow({ c, disabled }: { c: Row; disabled: boolean }) {
           </div>
           <div className="text-xs text-muted">
             {needsHandle ? <span className="font-semibold text-down">Needs Instagram handle</span> : `@${c.instagram}`}
-            {c.followers != null && ` · ${c.followers.toLocaleString("en-IN")} followers`}
+            {c.followers != null && ` · ${c.followers.toLocaleString("en-US")} followers`}
           </div>
         </div>
         <input name="instagram" placeholder={needsHandle ? "Instagram URL or @handle" : "Change handle (optional)"} className={`${input} w-56`} disabled={disabled} />
