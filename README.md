@@ -17,13 +17,15 @@ Instagram analytics for every Bigg Boss Telugu Season 10 contestant: live follow
 ```
 GitHub Actions (every 15 min)            data branch                 Vercel site
   scripts/sync-roster.ts (every 6 h)  ─┐    contestants.json            reads the data branch,
-  scripts/collect.ts                  ─┴─►  snapshots.json  (daily)  ─► refreshes every 10 min,
-                                            intraday.json   (48 h)      no redeploys
+  scripts/collect.ts                  ─┴─►  snapshots.json  (daily)  ─► shows new data ~1 min
+                                            intraday.json   (48 h)      after each run, no redeploys
   /admin (server actions) ─────────────────► contestants.json
 ```
 
 - **`master`** holds the code. **`data`** holds only the latest data files as one force-pushed commit; history lives inside `snapshots.json`. `vercel.json` stops Vercel from deploying the `data` branch.
 - `data/` on `master` is a build-time fallback and the local-development copy.
+- Pages check the data branch's latest commit every 60 s (files are fetched per commit, so they are only downloaded when they change). Open pages poll `/api/version` once a minute and refresh in place when newer data exists.
+- Numbers use international notation (1.85M, 931K). Dark mode is the default; the header toggle remembers a light choice per device.
 - Instagram numbers come from the official Graph API **Business Discovery** endpoint (Business/Creator accounts only). Reach and impressions are private to each account, so the site uses **engagement rate**: the median of (likes + comments) ÷ followers per post. It's a median because collab reels with the show's accounts can reach far beyond a contestant's own followers.
 
 ## Roster changes (evictions, wildcards)
