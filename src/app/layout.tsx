@@ -6,6 +6,10 @@ import { dataVersion, loadDataset } from "@/lib/data";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { Nav } from "@/components/Nav";
 import { RelativeTime } from "@/components/RelativeTime";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+/** Applies a saved light-mode choice before first paint (dark is the default). */
+const THEME_SCRIPT = 'try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}';
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -26,7 +30,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     ? new Date(meta.lastUpdated).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" })
     : "never";
   return (
-    <html lang="en" className={`${geist.variable} h-full antialiased`}>
+    <html lang="en" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <LiveRefresh version={version} />
         <header className="sticky top-0 z-30 border-b border-line bg-page/80 backdrop-blur-xl">
@@ -46,10 +53,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <nav className="order-last w-full sm:order-none sm:w-auto">
               <Nav />
             </nav>
-            <span className="ml-auto flex items-center gap-2 text-xs text-muted">
-              <span className="live-dot h-2 w-2 rounded-full bg-[var(--up)]" aria-hidden />
-              Updated {meta.lastUpdated ? <RelativeTime iso={meta.lastUpdated} absolute={updated} /> : "never"}
-            </span>
+            <div className="ml-auto flex items-center gap-3">
+              <span className="flex items-center gap-2 text-xs text-muted">
+                <span className="live-dot h-2 w-2 rounded-full bg-[var(--up)]" aria-hidden />
+                Updated {meta.lastUpdated ? <RelativeTime iso={meta.lastUpdated} absolute={updated} /> : "never"}
+              </span>
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         {meta.source === "demo" && (
