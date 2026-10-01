@@ -1,84 +1,102 @@
 import Link from "next/link";
 import type { ContestantStats } from "@/lib/analytics";
-import { compact, shortDate, signed } from "@/lib/format";
+import { shortDate, signed } from "@/lib/format";
 import { Avatar } from "./Avatar";
 
 /**
- * Contestant × day grid of daily follower change. Diverging scale:
- * blue steps for gains (scaled per row, so small and large accounts are both
- * readable), red for losses, neutral for ~0.
+ * Contestant × day grid of daily follower change. One shared scale for everyone: fixed bands,
+ * blue for gains and red for losses, with stronger colour meaning a bigger change (same reading in
+ * light and dark mode). Every value is shown with its sign.
  */
+const GAIN_BANDS = [
+  { min: 1, label: "+1–99", strength: 18 },
+  { min: 100, label: "+100–499", strength: 35 },
+  { min: 500, label: "+500–999", strength: 55 },
+  { min: 1_000, label: "+1K–5K", strength: 75 },
+  { min: 5_000, label: "+5K+", strength: 95 },
+];
+const LOSS_BANDS = [
+  { min: 1, label: "−1–99", strength: 30 },
+  { min: 100, label: "−100–499", strength: 55 },
+  { min: 500, label: "−500+", strength: 85 },
+];
+
+function band<T extends { min: number }>(bands: T[], v: number): T {
+  return [...bands].reverse().find((b) => v >= b.min) ?? bands[0];
+}
+
+const tint = (color: string, strength: number) => `color-mix(in srgb, ${color} ${strength}%, transparent)`;
+
+function cellStyle(gain: number | null) {
+  if (gain == null) return { background: "transparent", color: "var(--muted)" };
+  if (gain === 0) return { background: "var(--surface-2)", color: "var(--muted)" };
+  const b = gain > 0 ? band(GAIN_BANDS, gain) : band(LOSS_BANDS, -gain);
+  const color = gain > 0 ? "var(--series-1)" : "var(--neg-3)";
+  return { background: tint(color, b.strength), color: b.strength >= 55 ? "#fff" : "var(--ink)" };
+}
+
 export function GainHeatmap({ stats, dates, premiereDate, days = 21 }: { stats: ContestantStats[]; dates: string[]; premiereDate: string; days?: number }) {
   // Skip days nobody has a change for (e.g. the first day of tracking).
   const cols = dates.slice(-days).filter((d) => stats.some((s) => s.series.find((p) => p.date === d)?.gain != null));
   if (!cols.length) return <p className="text-sm text-muted">Daily changes appear after the second day of tracking.</p>;
   const rows = [...stats].sort((a, b) => (b.gain7d ?? b.gainSeason ?? 0) - (a.gain7d ?? a.gainSeason ?? 0));
 
-  const cell = (gain: number | null, rowMax: number) => {
-    if (gain == null) return { bg: "transparent", fg: "var(--muted)" };
-    if (gain < 0) {
-      const r = Math.min(1, Math.abs(gain) / (rowMax || 1));
-      return { bg: `var(--neg-${r > 0.5 ? 3 : r > 0.15 ? 2 : 1})`, fg: r > 0.5 ? "#fff" : "var(--ink)" };
-    }
-    const s = gain === 0 ? 0 : Math.min(6, 1 + Math.floor((gain / (rowMax || 1)) * 5.999));
-    return { bg: `var(--seq-${s})`, fg: s >= 4 ? "var(--seq-on-hi)" : "var(--ink-2)" };
-  };
-
   return (
-    <div className="overflow-x-auto scrollbar-thin">
-      <table className="w-full border-separate border-spacing-[3px] text-[11px]">
-        <thead>
-          <tr>
-            <th className="sticky left-0 z-10 bg-surface" />
-            {cols.map((d) => (
-              <th key={d} className={`min-w-9 pb-1 font-normal ${d === premiereDate ? "text-ink" : "text-muted"}`}>
-                <div>{shortDate(d).split(" ")[0]}</div>
-                <div className="text-[10px]">{shortDate(d).split(" ")[1]}</div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((s) => {
-            const rowGains = cols.map((d) => s.series.find((p) => p.date === d)?.gain ?? null);
-            const rowMax = Math.max(...rowGains.map((g) => Math.abs(g ?? 0)));
-            return (
+    <div>
+      <div className="overflow-x-auto scrollbar-thin">
+        <table className="border-separate border-spacing-[3px] text-xs">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 bg-surface" />
+              {cols.map((d) => (
+                <th key={d} className={`min-w-16 pb-1 font-normal ${d === premiereDate ? "text-ink" : "text-muted"}`}>
+                  {shortDate(d)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((s) => (
               <tr key={s.contestant.id}>
-                <th className="sticky left-0 z-10 bg-surface pr-2 text-left font-normal">
+                <th className="sticky left-0 z-10 bg-surface pr-3 text-left font-normal">
                   <Link href={`/contestants/${s.contestant.id}`} className="flex items-center gap-2 whitespace-nowrap hover:underline">
                     <Avatar name={s.contestant.name} photo={s.photo} size={22} evicted={s.contestant.status === "evicted"} />
-                    <span className="max-w-32 truncate text-xs text-ink">{s.contestant.name}</span>
+                    <span className="max-w-36 truncate text-ink">{s.contestant.name}</span>
                   </Link>
                 </th>
-                {rowGains.map((g, i) => {
-                  const c = cell(g, rowMax);
+                {cols.map((d) => {
+                  const g = s.series.find((p) => p.date === d)?.gain ?? null;
                   return (
                     <td
-                      key={cols[i]}
-                      className="tnum h-7 rounded-md text-center"
-                      style={{ background: c.bg, color: c.fg }}
-                      title={`${s.contestant.name} · ${shortDate(cols[i])}: ${g == null ? "no data" : signed(g) + " followers"}`}
+                      key={d}
+                      className="tnum h-7 rounded-md px-2 text-center font-medium"
+                      style={cellStyle(g)}
+                      title={`${s.contestant.name} · ${shortDate(d)}: ${g == null ? "no data" : `${signed(g)} followers`}`}
                     >
-                      {g == null ? "" : g === 0 ? "0" : compact(Math.abs(g)).replace(/\.\d/, "")}
+                      {g == null ? "" : g === 0 ? "0" : signed(g)}
                     </td>
                   );
                 })}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted">
-        <span className="flex items-center gap-1">
-          Loss
-          {[3, 2, 1].map((n) => <span key={n} className="h-3 w-4 rounded-sm" style={{ background: `var(--neg-${n})` }} />)}
-        </span>
-        <span className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5, 6].map((n) => <span key={n} className="h-3 w-4 rounded-sm" style={{ background: `var(--seq-${n})` }} />)}
-          Gain
-        </span>
-        <span>Shading is relative to each contestant&apos;s own biggest day, so small and large accounts are both readable.</span>
+            ))}
+          </tbody>
+        </table>
       </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-muted">
+        {[...LOSS_BANDS].reverse().map((b) => (
+          <span key={b.label} className="flex items-center gap-1.5">
+            <span className="h-3 w-5 rounded-sm" style={{ background: tint("var(--neg-3)", b.strength) }} />
+            {b.label}
+          </span>
+        ))}
+        {GAIN_BANDS.map((b) => (
+          <span key={b.label} className="flex items-center gap-1.5">
+            <span className="h-3 w-5 rounded-sm" style={{ background: tint("var(--series-1)", b.strength) }} />
+            {b.label}
+          </span>
+        ))}
+      </div>
+      <p className="mt-1.5 text-[11px] text-muted">Followers gained (blue) or lost (red) each day. Stronger colour = bigger change, on the same scale for everyone.</p>
     </div>
   );
 }

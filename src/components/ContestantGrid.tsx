@@ -8,7 +8,7 @@ import { Avatar } from "./Avatar";
 import { Sparkline } from "./Sparkline";
 import { Delta, RankBadge, RankChange, Segmented } from "./ui";
 
-type SortKey = "followers" | "gain1d" | "gain7d" | "pctSeason" | "engagementRate";
+type SortKey = "followers" | "gain1d" | "gain7d" | "gainSeason" | "pctSeason" | "engagementRate";
 type Filter = "all" | "active" | "evicted";
 
 const SORTS: { value: SortKey; label: string }[] = [
@@ -19,8 +19,14 @@ const SORTS: { value: SortKey; label: string }[] = [
   { value: "engagementRate", label: "Engagement" },
 ];
 
-export function ContestantGrid({ stats }: { stats: ClientStats[] }) {
+export function ContestantGrid({ stats, growthLabel = "since premiere" }: { stats: ClientStats[]; growthLabel?: string }) {
   const [sort, setSort] = useState<SortKey>("followers");
+  // Until 7 days of data exist, "This week" ranks by gain since tracking began instead of an
+  // all-empty column (which would leave the roster order and label it a ranking).
+  const weekReady = stats.some((s) => s.gain7d != null);
+  const key: SortKey = sort === "gain7d" && !weekReady ? "gainSeason" : sort;
+  const sorts = SORTS.map((o) => (o.value === "gain7d" && !weekReady ? { ...o, label: "Gained" } : o));
+  const rankLabel = key === "gainSeason" ? `gained ${growthLabel}` : SORTS.find((x) => x.value === key)?.label.toLowerCase();
   const [filter, setFilter] = useState<Filter>("all");
   const [picked, setPicked] = useState<string[]>([]);
 
@@ -28,8 +34,8 @@ export function ContestantGrid({ stats }: { stats: ClientStats[] }) {
     () =>
       stats
         .filter((s) => filter === "all" || s.contestant.status === filter)
-        .sort((a, b) => (b[sort] ?? -Infinity) - (a[sort] ?? -Infinity)),
-    [stats, sort, filter],
+        .sort((a, b) => (b[key] ?? -Infinity) - (a[key] ?? -Infinity)),
+    [stats, key, filter],
   );
 
   const toggle = (id: string) =>
@@ -40,9 +46,11 @@ export function ContestantGrid({ stats }: { stats: ClientStats[] }) {
       case "gain1d":
         return { label: "Today", node: <Delta value={s.gain1d} /> };
       case "gain7d":
-        return { label: "7 days", node: <Delta value={s.gain7d} /> };
+        return weekReady
+          ? { label: "7 days", node: <Delta value={s.gain7d} /> }
+          : { label: growthLabel[0].toUpperCase() + growthLabel.slice(1), node: <Delta value={s.gainSeason} /> };
       case "pctSeason":
-        return { label: "Season growth", node: <Delta value={s.pctSeason} kind="percent" /> };
+        return { label: "Growth", node: <Delta value={s.pctSeason} kind="percent" /> };
       case "engagementRate":
         return { label: "Engagement", node: <span>{percent(s.engagementRate, 2)}</span> };
       default:
@@ -53,7 +61,7 @@ export function ContestantGrid({ stats }: { stats: ClientStats[] }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Segmented value={sort} options={SORTS} onChange={setSort} size="sm" />
+        <Segmented value={sort} options={sorts} onChange={setSort} size="sm" />
         <Segmented
           value={filter}
           onChange={setFilter}
@@ -88,7 +96,7 @@ export function ContestantGrid({ stats }: { stats: ClientStats[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     {/* The photo badge is the follower rank; show the list position only when sorted by something else. */}
-                    {sort !== "followers" && <span className="tnum text-xs text-muted">#{i + 1} by {SORTS.find((x) => x.value === sort)?.label.toLowerCase()}</span>}
+                    {key !== "followers" && s[key] != null && <span className="tnum text-xs text-muted">#{i + 1} by {rankLabel}</span>}
                     {evicted && <span className="rounded bg-surface-2 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted">Evicted</span>}
                   </div>
                   <div className="truncate font-semibold leading-tight">{s.contestant.name}</div>

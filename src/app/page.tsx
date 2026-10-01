@@ -170,7 +170,7 @@ export default async function Dashboard() {
       </div>
 
       <SectionHeading id="contestants" eyebrow="All contestants" title="The house at a glance" desc="Tap a card for the full profile, or press + on several cards to compare them." />
-      <ContestantGrid stats={client} />
+      <ContestantGrid stats={client} growthLabel={a.growthSince} />
 
       <SectionHeading id="trends" eyebrow="Trends" title="Follower trend" desc={`Pick up to 6 contestants and switch between follower count, % growth ${a.growthSince} and daily gain.`} />
       <section className="card p-4 sm:p-5">
@@ -188,7 +188,7 @@ export default async function Dashboard() {
           </div>
         </Section>
       </div>
-      <Section title="Daily gain heatmap" desc="Each cell is one contestant's follower change that day, most recent 3 weeks. Sorted by this week's gain.">
+      <Section title="Daily follower change" desc="Followers gained or lost by each contestant per day (last 3 weeks), biggest gainers first.">
         <GainHeatmap stats={stats} dates={a.dates} premiereDate={ds.season.premiereDate} />
       </Section>
       <div className="grid gap-4 lg:grid-cols-5">

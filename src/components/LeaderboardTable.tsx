@@ -45,8 +45,10 @@ export function LeaderboardTable({ stats, growthLabel = "since premiere" }: { st
       .filter((s) => filter === "all" || s.contestant.status === filter)
       .filter((s) => !q || (s.contestant.name + s.contestant.teluguName).toLowerCase().includes(q))
       .sort((a, b) => {
-        const av = a[sort.key] ?? -Infinity;
-        const bv = b[sort.key] ?? -Infinity;
+        // Missing values (e.g. 7-day figures in the first week) always go last, whichever direction.
+        const av = a[sort.key];
+        const bv = b[sort.key];
+        if (av == null || bv == null) return av == null && bv == null ? b.followers - a.followers : av == null ? 1 : -1;
         return (Number(av) - Number(bv)) * sort.dir;
       });
   }, [stats, sort, filter, query]);

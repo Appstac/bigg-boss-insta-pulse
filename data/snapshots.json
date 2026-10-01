@@ -128,127 +128,253 @@
  {
   "date": "2026-09-30",
   "id": "alluri-krishna",
-  "followers": 26097,
-  "following": 7751,
+  "followers": 26239,
+  "following": 7752,
   "posts": 3066
  },
  {
   "date": "2026-09-30",
   "id": "aman-masud",
-  "followers": 103134,
+  "followers": 103665,
   "following": 1478,
-  "posts": 351
+  "posts": 355
  },
  {
   "date": "2026-09-30",
   "id": "apoorva-tungaturthy",
-  "followers": 51558,
+  "followers": 52720,
   "following": 1562,
-  "posts": 319
+  "posts": 323
  },
  {
   "date": "2026-09-30",
   "id": "auto-ram-prasad",
-  "followers": 366947,
+  "followers": 367088,
   "following": 67,
-  "posts": 471
+  "posts": 472
  },
  {
   "date": "2026-09-30",
   "id": "chaithra-rai",
-  "followers": 722022,
+  "followers": 722016,
   "following": 993,
-  "posts": 2175
+  "posts": 2176
  },
  {
   "date": "2026-09-30",
   "id": "charan-mahadev",
-  "followers": 238363,
-  "following": 91,
-  "posts": 144
+  "followers": 238316,
+  "following": 92,
+  "posts": 145
  },
  {
   "date": "2026-09-30",
   "id": "debjani-modak",
-  "followers": 326999,
+  "followers": 328053,
   "following": 81,
-  "posts": 480
+  "posts": 483
  },
  {
   "date": "2026-09-30",
   "id": "gundeboina-jhansi",
-  "followers": 931185,
+  "followers": 931491,
   "following": 58,
-  "posts": 1288
+  "posts": 1289
  },
  {
   "date": "2026-09-30",
   "id": "mithilesh-reddy",
-  "followers": 251862,
-  "following": 273,
-  "posts": 468
+  "followers": 253387,
+  "following": 274,
+  "posts": 473
  },
  {
   "date": "2026-09-30",
   "id": "mukesh-gowda",
-  "followers": 376480,
+  "followers": 377164,
   "following": 716,
   "posts": 412
  },
  {
   "date": "2026-09-30",
   "id": "potti-naresh",
-  "followers": 251087,
+  "followers": 251543,
   "following": 33,
-  "posts": 289
+  "posts": 292
  },
  {
   "date": "2026-09-30",
   "id": "rohit-patnam",
-  "followers": 142247,
+  "followers": 143872,
   "following": 8,
-  "posts": 188
+  "posts": 193
  },
  {
   "date": "2026-09-30",
   "id": "shalini-patel",
-  "followers": 89754,
-  "following": 664,
-  "posts": 263
+  "followers": 91307,
+  "following": 663,
+  "posts": 265
  },
  {
   "date": "2026-09-30",
   "id": "srishti-vyakaranam",
-  "followers": 152041,
-  "following": 1132,
-  "posts": 1673
+  "followers": 152179,
+  "following": 1133,
+  "posts": 1677
  },
  {
   "date": "2026-09-30",
   "id": "sudheer-kumar-reddy",
-  "followers": 208688,
+  "followers": 209004,
   "following": 440,
-  "posts": 1164
+  "posts": 1162
  },
  {
   "date": "2026-09-30",
   "id": "temper-vamsi",
-  "followers": 51658,
+  "followers": 52139,
   "following": 436,
-  "posts": 73
+  "posts": 76
  },
  {
   "date": "2026-09-30",
   "id": "thrigun-adith-arun",
-  "followers": 62593,
+  "followers": 63727,
   "following": 529,
-  "posts": 532
+  "posts": 535
  },
  {
   "date": "2026-09-30",
   "id": "varshini-sounderajan",
-  "followers": 1854313,
+  "followers": 1855282,
   "following": 996,
-  "posts": 1077
+  "posts": 1078
+ },
+ {
+  "date": "2026-10-01",
+  "id": "alluri-krishna",
+  "followers": 26306,
+  "following": 7752,
+  "posts": 3067
+ },
+ {
+  "date": "2026-10-01",
+  "id": "aman-masud",
+  "followers": 103878,
+  "following": 1478,
+  "posts": 355
+ },
+ {
+  "date": "2026-10-01",
+  "id": "apoorva-tungaturthy",
+  "followers": 53475,
+  "following": 1563,
+  "posts": 323
+ },
+ {
+  "date": "2026-10-01",
+  "id": "auto-ram-prasad",
+  "followers": 367134,
+  "following": 67,
+  "posts": 473
+ },
+ {
+  "date": "2026-10-01",
+  "id": "chaithra-rai",
+  "followers": 721965,
+  "following": 993,
+  "posts": 2176
+ },
+ {
+  "date": "2026-10-01",
+  "id": "charan-mahadev",
+  "followers": 237928,
+  "following": 92,
+  "posts": 147
+ },
+ {
+  "date": "2026-10-01",
+  "id": "debjani-modak",
+  "followers": 328547,
+  "following": 81,
+  "posts": 484
+ },
+ {
+  "date": "2026-10-01",
+  "id": "gundeboina-jhansi",
+  "followers": 931479,
+  "following": 58,
+  "posts": 1290
+ },
+ {
+  "date": "2026-10-01",
+  "id": "mithilesh-reddy",
+  "followers": 254005,
+  "following": 275,
+  "posts": 473
+ },
+ {
+  "date": "2026-10-01",
+  "id": "mukesh-gowda",
+  "followers": 377364,
+  "following": 716,
+  "posts": 414
+ },
+ {
+  "date": "2026-10-01",
+  "id": "potti-naresh",
+  "followers": 251884,
+  "following": 33,
+  "posts": 294
+ },
+ {
+  "date": "2026-10-01",
+  "id": "rohit-patnam",
+  "followers": 143812,
+  "following": 8,
+  "posts": 195
+ },
+ {
+  "date": "2026-10-01",
+  "id": "shalini-patel",
+  "followers": 91996,
+  "following": 663,
+  "posts": 266
+ },
+ {
+  "date": "2026-10-01",
+  "id": "srishti-vyakaranam",
+  "followers": 152295,
+  "following": 1133,
+  "posts": 1680
+ },
+ {
+  "date": "2026-10-01",
+  "id": "sudheer-kumar-reddy",
+  "followers": 209080,
+  "following": 440,
+  "posts": 1163
+ },
+ {
+  "date": "2026-10-01",
+  "id": "temper-vamsi",
+  "followers": 51621,
+  "following": 435,
+  "posts": 77
+ },
+ {
+  "date": "2026-10-01",
+  "id": "thrigun-adith-arun",
+  "followers": 64703,
+  "following": 529,
+  "posts": 536
+ },
+ {
+  "date": "2026-10-01",
+  "id": "varshini-sounderajan",
+  "followers": 1855443,
+  "following": 996,
+  "posts": 1079
  }
 ]
