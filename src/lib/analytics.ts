@@ -90,13 +90,13 @@ export interface ContestantStats {
   weekdayCounts: number[];
   hourCounts: number[];
   sparkline: number[];
-  /** 15-minute points from the last 48 hours. */
+  /** 30-minute points from the last 48 hours. */
   intraday: { t: string; followers: number }[];
   /** Change vs the point closest to 24 hours before the latest one. */
   gain24h: number | null;
   /** Change over the last ~1 hour. */
   gain1h: number | null;
-  /** Change across the available 15-minute points in the last 24 h (works before a full day exists). */
+  /** Change across the available 30-minute points in the last 24 h (works before a full day exists). */
   liveGain: number | null;
   series: SeriesPoint[];
   seasonPosts: PostWithStats[];
@@ -166,7 +166,7 @@ export interface Analytics {
   dates: string[];
   weekLabels: string[];
   seasonDay: number | null;
-  /** Latest 15-minute run time, if intraday data exists. */
+  /** Latest 30-minute run time, if intraday data exists. */
   latestRun: string | null;
   /**
    * "since premiere", or "since 29 Sept" when tracking began after the premiere (Instagram has no

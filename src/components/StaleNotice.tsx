@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-const STALE_MS = 60 * 60_000;
+// Collection runs every 30 min and GitHub can start runs late, so allow three missed slots.
+const STALE_MS = 90 * 60_000;
 
-/** Banner shown when the latest collection is over an hour old (collection paused or failing). */
+/** Banner shown when the latest collection is over 90 minutes old (collection paused or failing). */
 export function StaleNotice({ iso }: { iso: string | null }) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {

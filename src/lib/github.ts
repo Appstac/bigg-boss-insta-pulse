@@ -64,7 +64,7 @@ export async function writeDataFile(path: string, content: string, message: stri
   if (!res.ok) throw new Error(`GitHub write ${path}: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
-/** Start the collection workflow right away instead of waiting for the next 15-minute run. */
+/** Start the collection workflow right away instead of waiting for the next 30-minute run. */
 export async function runCollectorNow(): Promise<boolean> {
   const res = await fetch(`https://api.github.com/repos/${repo()}/actions/workflows/collect.yml/dispatches`, {
     method: "POST",

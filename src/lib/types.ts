@@ -36,7 +36,7 @@ export interface Snapshot {
   posts: number;
 }
 
-/** One row per contestant per collector run (every ~15 min); only the last 48 hours are kept. */
+/** One row per contestant per collector run (every ~30 min); only the last 48 hours are kept. */
 export interface IntradayPoint {
   /** ISO timestamp of the run */
   t: string;

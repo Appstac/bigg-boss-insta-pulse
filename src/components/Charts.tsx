@@ -68,7 +68,7 @@ export function AreaTrend({
   markers?: { date: string; label: string }[];
   height?: number;
   withRange?: boolean;
-  /** "time": `date` holds ISO timestamps (15-minute points), shown as IST clock times. */
+  /** "time": `date` holds ISO timestamps (30-minute points), shown as IST clock times. */
   xFormat?: "date" | "time";
 }) {
   const [range, setRange] = useState<TrendRange>("all");

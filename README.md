@@ -1,6 +1,6 @@
 # BB Telugu 10 · Insta Pulse
 
-Instagram analytics for every Bigg Boss Telugu Season 10 contestant: live follower counts (every ~15 minutes), daily trends, posting activity, engagement, leaderboards, and side-by-side comparison of any 2–6 contestants.
+Instagram analytics for every Bigg Boss Telugu Season 10 contestant: live follower counts (every ~30 minutes), daily trends, posting activity, engagement, leaderboards, and side-by-side comparison of any 2–6 contestants.
 
 ## Pages
 
@@ -15,7 +15,7 @@ Instagram analytics for every Bigg Boss Telugu Season 10 contestant: live follow
 ## How data flows
 
 ```
-GitHub Actions (every 15 min)            data branch                 Vercel site
+GitHub Actions (every 30 min)            data branch                 Vercel site
   scripts/sync-roster.ts (every 6 h)  ─┐    contestants.json            reads the data branch,
   scripts/collect.ts                  ─┴─►  snapshots.json  (daily)  ─► shows new data ~1 min
                                             intraday.json   (48 h)      after each run, no redeploys
@@ -37,7 +37,7 @@ GitHub Actions (every 15 min)            data branch                 Vercel site
 ## Setup
 
 ### GitHub repository
-Must be **public** for free 15-minute Actions runs (private repos get 2,000 min/month; this needs about 2,900). Nothing secret is in the repo.
+Must be **public** for free Actions runs (unlimited minutes for public repos). Nothing secret is in the repo.
 
 Repository **secrets** (Settings → Secrets and variables → Actions):
 

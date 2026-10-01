@@ -84,10 +84,10 @@ export default async function Dashboard() {
         <StatTile icon={<Icon name="heart" />} label="Likes + comments" value={compact(house.totalInteractions)} sub={`${full(house.postsSeason)} posts · typical engagement ${percent(house.avgEngagement, 1)}`} />
       </div>
 
-      {/* Live: 15-minute data from the last 24 hours */}
+      {/* Live: 30-minute data from the last 24 hours */}
       <Section
         title="Live · last 24 hours"
-        desc={a.latestRun ? `Refreshed about every 15 minutes · latest run ${istTime(a.latestRun)} IST` : "Refreshed about every 15 minutes"}
+        desc={a.latestRun ? `Refreshed about every 30 minutes · latest run ${istTime(a.latestRun)} IST` : "Refreshed about every 30 minutes"}
         action={
           <span className="inline-flex items-center gap-1.5 rounded-full bg-up-bg px-2.5 py-1 text-xs font-medium text-up">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-[var(--up)]" /> Live
@@ -115,7 +115,7 @@ export default async function Dashboard() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-muted">Live tracking has started. The 24-hour chart fills in as 15-minute updates arrive.</p>
+          <p className="text-sm text-muted">Live tracking has started. The 24-hour chart fills in as 30-minute updates arrive.</p>
         )}
       </Section>
 

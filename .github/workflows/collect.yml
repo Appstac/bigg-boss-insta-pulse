@@ -1,4 +1,4 @@
-# Takes an Instagram snapshot every 15 minutes and publishes it to the `data` branch.
+# Takes an Instagram snapshot every 30 minutes and publishes it to the `data` branch.
 # The site reads that branch directly (see src/lib/data.ts), so no redeploy is needed.
 # vercel.json disables deployments for `data`. GitHub may start scheduled runs a few
 # minutes late when its runners are busy.
@@ -6,9 +6,9 @@ name: Instagram snapshot
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
-    # Roster check (evictions / wildcards) every 6 hours; keep this string in sync with the step below.
-    - cron: "7 */6 * * *"
+    # Every 30 minutes, off the top of the hour (GitHub is busiest at :00). A 15-minute schedule
+    # led Meta to temporarily block the app on 30 Sep 2026, so keep this modest.
+    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -42,9 +42,15 @@ jobs:
           fi
 
       - name: Check roster for evictions and wildcards
-        if: github.event.schedule == '7 */6 * * *' || github.event_name == 'workflow_dispatch'
-        # A failure here (source page down or redesigned) must not stop the collection.
-        run: node --no-warnings scripts/sync-roster.ts || echo "::warning::Roster check failed; roster unchanged"
+        # During the 00, 06, 12 and 18 UTC hours (tolerates late starts) and on manual runs. A failure here
+        # (source page down or redesigned) must not stop the collection.
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ $(( 10#$(date -u +%H) % 6 )) -eq 0 ]; then
+            node --no-warnings scripts/sync-roster.ts || echo "::warning::Roster check failed; roster unchanged"
+          else
+            echo "Roster check runs every 6 hours; skipped this run."
+          fi
 
       - name: Collect
         run: node --no-warnings scripts/collect.ts

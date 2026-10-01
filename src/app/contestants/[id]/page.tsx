@@ -138,7 +138,7 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
       {s.intraday.length >= 2 && (
         <Section title="Last 48 hours" desc={
             <>
-              Every ~15 minutes ·{" "}
+              Every ~30 minutes ·{" "}
               {s.gain24h != null ? (
                 <><Delta value={s.gain24h} /> in 24 h</>
               ) : (

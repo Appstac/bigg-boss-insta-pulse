@@ -9,7 +9,7 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 
 /**
- * Live data (snapshots, posts, photos) is committed every ~15 minutes to the repo's `data` branch.
+ * Live data (snapshots, posts, photos) is committed every ~30 minutes to the repo's `data` branch.
  * On Vercel the site reads it from there with a short cache, so new numbers show up without a
  * redeploy. Locally (or if DATA_BASE_URL is set to "local") it reads ./data and ./public/avatars.
  */
@@ -17,7 +17,7 @@ const DATA_BASE_URL =
   process.env.DATA_BASE_URL ?? (process.env.VERCEL && repo() ? `https://raw.githubusercontent.com/${repo()}/data` : "local");
 const REMOTE = DATA_BASE_URL !== "local";
 
-/** Seconds between checks for a new data-branch commit (the collector publishes every ~15 min). */
+/** Seconds between checks for a new data-branch commit (the collector publishes every ~30 min). */
 export const DATA_REVALIDATE = 60;
 /** Cache tag on every live-data fetch; admin edits expire it so changes show immediately. */
 export const LIVE_TAG = "live-data";

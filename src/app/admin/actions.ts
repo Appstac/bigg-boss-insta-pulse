@@ -35,7 +35,7 @@ async function saveAndRefresh(roster: Contestant[], message: string, collect: bo
   revalidatePath("/", "layout");
   if (where === "local") return "Saved to data/contestants.json. Run `npm run collect` to fetch their stats.";
   if (collect && hasWriteAccess() && (await runCollectorNow())) return "Saved. Collection started, stats appear in about a minute.";
-  return "Saved. Stats appear after the next 15-minute collection.";
+  return "Saved. Stats appear after the next 30-minute collection.";
 }
 
 export async function login(_: ActionState, form: FormData): Promise<ActionState> {
