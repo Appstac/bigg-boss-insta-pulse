@@ -7,6 +7,7 @@ import { LiveRefresh } from "@/components/LiveRefresh";
 import { Nav } from "@/components/Nav";
 import { RelativeTime } from "@/components/RelativeTime";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { StaleNotice } from "@/components/StaleNotice";
 
 /** Applies a saved light-mode choice before first paint (dark is the default). */
 const THEME_SCRIPT = 'try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}';
@@ -63,6 +64,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             </div>
           </div>
         </header>
+        <StaleNotice iso={meta.source === "instagram" ? meta.lastUpdated : null} />
         {meta.source === "demo" && (
           <div className="border-b border-line bg-surface-2 px-4 py-2 text-center text-xs text-ink-2 sm:text-sm">
             <strong className="text-ink">Preview with simulated numbers.</strong> Live Instagram data appears after the first <code className="rounded bg-surface-3 px-1">npm run collect</code>.
