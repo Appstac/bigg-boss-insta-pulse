@@ -81,6 +81,15 @@ export function handleFromUrl(url: string | undefined): string {
   return m && !["p", "reel", "stories", "explore"].includes(m[1].toLowerCase()) ? m[1].replace(/\.$/, "") : "";
 }
 
+/** First names equal after removing spaces and doubled letters ("Shiva Kumar" ~ "Shivakumar", "Dakshi" ~ "Dakkshi"). */
+function sameFirstName(a: string, b: string): boolean {
+  const key = (s: string) => s.toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z ]/g, "").trim();
+  const squash = (s: string) => s.replace(/(.)\1+/g, "$1");
+  const [fa, fb] = [key(a).split(" ")[0], key(b).split(" ")[0]];
+  const [ja, jb] = [key(a).replace(/ /g, ""), key(b).replace(/ /g, "")];
+  return !!fa && !!fb && (squash(fa) === squash(fb) || squash(ja).startsWith(squash(fb)) || squash(jb).startsWith(squash(fa)));
+}
+
 const norm = (s: string) => s.toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z]/g, "");
 
 const addDays = (d: string, n: number) => {
@@ -104,10 +113,15 @@ async function main() {
   const today = new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 10);
   const changes: string[] = [];
   for (const r of records) {
+    const handle = handleFromUrl(r.instagramUrl).toLowerCase();
     const existing =
       roster.find((c) => c.sourceSlug === r.slug) ??
       roster.find((c) => norm(c.name) === norm(r.name)) ??
-      roster.find((c) => c.id === r.slug);
+      roster.find((c) => c.id === r.slug) ??
+      (handle ? roster.find((c) => c.instagram.toLowerCase() === handle) : undefined) ??
+      // Contestants added by hand (e.g. from /admin) before the source listed them, possibly spelled
+      // differently ("Shiva Kumar" vs "Shivakumar Marihal", "Dakshi" vs "Dakkshi").
+      roster.find((c) => !c.sourceSlug && sameFirstName(c.name, r.name));
     const evicted = /elim|evict/i.test(r.status);
     const evictedOn = r.eliminatedWeek ? addDays(season.premiereDate, 7 * r.eliminatedWeek) : today;
 

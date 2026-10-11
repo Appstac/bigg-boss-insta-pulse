@@ -78,7 +78,7 @@ export default async function ContestantPage(props: PageProps<"/contestants/[id]
                   <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{c.name}</h1>
                   <RankBadge rank={s.rank} />
                 </div>
-                <p className="text-ink-2">{c.teluguName} · {c.profession}</p>
+                <p className="text-ink-2">{[c.teluguName, c.profession].filter(Boolean).join(" · ")}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                   <StatusBadge status={c.status} />
                   {c.instagram && (
