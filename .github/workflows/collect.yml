@@ -66,6 +66,9 @@ jobs:
           cp data/contestants.json data/meta.json data/profiles.json data/snapshots.json data/intraday.json out/
           cp -r data/posts out/posts
           cp public/avatars/*.jpg out/avatars/ 2>/dev/null || true
+          # Vercel reads vercel.json from the branch it is building, so the data branch needs its own
+          # copy saying "never deploy" (the master copy is not seen when data is pushed).
+          echo '{ "git": { "deploymentEnabled": false } }' > out/vercel.json
           cd out
           git init -q -b data
           git config user.name "github-actions[bot]"
