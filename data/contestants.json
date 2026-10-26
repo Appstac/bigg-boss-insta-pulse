@@ -4,11 +4,12 @@
     "name": "Charan Mahadev",
     "teluguName": "చరణ్ మహాదేవ్",
     "profession": "Radio Jockey",
-    "status": "active",
+    "status": "evicted",
     "instagram": "charan_mahadev15",
-    "evictedOn": null,
+    "evictedOn": "2026-10-10",
     "sourceSlug": "charan-mahadev",
-    "entryType": "original"
+    "entryType": "original",
+    "manual": true
   },
   {
     "id": "aman-masud",
@@ -37,20 +38,21 @@
     "name": "Shalini Patel",
     "teluguName": "షాలిని పటేల్",
     "profession": "Model",
-    "status": "active",
+    "status": "evicted",
     "instagram": "shaliniii_patell",
-    "evictedOn": null,
+    "evictedOn": "2026-10-24",
     "sourceSlug": "shalini-patel",
-    "entryType": "original"
+    "entryType": "original",
+    "manual": true
   },
   {
     "id": "srishti-vyakaranam",
     "name": "Srishti Vyakaranam",
     "teluguName": "సృష్టి వ్యాకరణం",
     "profession": "Model, Actor",
-    "status": "active",
+    "status": "evicted",
     "instagram": "srishtivyakaranam",
-    "evictedOn": null,
+    "evictedOn": "2026-10-03",
     "sourceSlug": "srishti-vyakaranam",
     "entryType": "original"
   },
@@ -59,11 +61,12 @@
     "name": "Apoorva Tungaturthy",
     "teluguName": "అపూర్వ తుంగతుర్తి",
     "profession": "Model",
-    "status": "active",
+    "status": "evicted",
     "instagram": "miss_apoorva3",
-    "evictedOn": null,
+    "evictedOn": "2026-10-10",
     "sourceSlug": "apoorva-tungaturthy",
-    "entryType": "wildcard"
+    "entryType": "wildcard",
+    "manual": true
   },
   {
     "id": "gundeboina-jhansi",
@@ -171,7 +174,7 @@
     "profession": "Fitness Model",
     "status": "evicted",
     "instagram": "mithilesh_lifts",
-    "evictedOn": "2026-09-27",
+    "evictedOn": "2026-09-25",
     "sourceSlug": "mithilesh-reddy",
     "entryType": "wildcard"
   },
@@ -182,7 +185,7 @@
     "profession": "Actor",
     "status": "evicted",
     "instagram": "krishnudu",
-    "evictedOn": "2026-09-20",
+    "evictedOn": "2026-09-19",
     "sourceSlug": "alluri-krishna-krishnudu",
     "entryType": "original"
   },
@@ -193,8 +196,64 @@
     "profession": "Television Actress",
     "status": "evicted",
     "instagram": "chaithrarai17",
-    "evictedOn": "2026-09-13",
+    "evictedOn": "2026-09-10",
     "sourceSlug": "chaithra-rai",
     "entryType": "original"
+  },
+  {
+    "id": "shivakumar-marihal",
+    "name": "Shivakumar Marihal",
+    "teluguName": "",
+    "profession": "Actor",
+    "status": "active",
+    "instagram": "shivakumar_marihal",
+    "evictedOn": null,
+    "entryType": "wildcard",
+    "addedOn": "2026-10-10"
+  },
+  {
+    "id": "dakkshi-guttikonda",
+    "name": "Dakkshi Guttikonda",
+    "teluguName": "",
+    "profession": "Actress",
+    "status": "evicted",
+    "instagram": "dakkshi_guttikonda",
+    "evictedOn": "2026-10-24",
+    "entryType": "wildcard",
+    "addedOn": "2026-10-10",
+    "manual": true
+  },
+  {
+    "id": "neethu-natraj",
+    "name": "Neethu Natraj",
+    "teluguName": "",
+    "profession": "Choreographer",
+    "status": "active",
+    "instagram": "neethu_natraj_official",
+    "evictedOn": null,
+    "entryType": "wildcard",
+    "addedOn": "2026-10-10"
+  },
+  {
+    "id": "swetha-naidu",
+    "name": "Swetha Naidu",
+    "teluguName": "",
+    "profession": "Dancer, Social media personality",
+    "status": "active",
+    "instagram": "swethaa_naidu",
+    "evictedOn": null,
+    "entryType": "wildcard",
+    "addedOn": "2026-10-10"
+  },
+  {
+    "id": "ramakrishna-koyya",
+    "name": "Ramakrishna Koyya",
+    "teluguName": "",
+    "profession": "Content creator",
+    "status": "active",
+    "instagram": "navarasalu_mawa_rk",
+    "evictedOn": null,
+    "entryType": "wildcard",
+    "addedOn": "2026-10-10"
   }
 ]

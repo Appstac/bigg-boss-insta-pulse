@@ -9,10 +9,17 @@ on:
     # Every 30 minutes, off the top of the hour (GitHub is busiest at :00). A 15-minute schedule
     # led Meta to temporarily block the app on 30 Sep 2026, so keep this modest.
     - cron: "7,37 * * * *"
+    # Eviction check from Wikipedia after the Sunday episode (ends ~10:30 PM IST) and a
+    # follow-up on Monday morning in case the page is edited late. Times are UTC:
+    #   17:15 UTC Sun = 10:45 PM IST, 18:15 UTC Sun = 11:45 PM IST, 03:30 UTC Mon = 9:00 AM IST
+    - cron: "15 17 * * 0"
+    - cron: "15 18 * * 0"
+    - cron: "30 3 * * 1"
   workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write # to flag new housemates that need an Instagram handle
 
 concurrency:
   group: collect
@@ -52,6 +59,15 @@ jobs:
             echo "Roster check runs every 6 hours; skipped this run."
           fi
 
+      - name: Check Wikipedia for evictions
+        # Sunday night / Monday morning schedules above, and manual runs. Never blocks collection.
+        if: >-
+          github.event_name == 'workflow_dispatch' ||
+          github.event.schedule == '15 17 * * 0' ||
+          github.event.schedule == '15 18 * * 0' ||
+          github.event.schedule == '30 3 * * 1'
+        run: node --no-warnings scripts/sync-wikipedia.ts || echo "::warning::Wikipedia eviction check failed; roster unchanged"
+
       - name: Collect
         run: node --no-warnings scripts/collect.ts
         env:
@@ -78,3 +94,19 @@ jobs:
           # --force-with-lease: if /admin saved a roster change while this run was going, don't
           # overwrite it; the next run will pick it up.
           git push -q --force-with-lease=data:${DATA_SHA:-} "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+
+      # Wikipedia lists a housemate we don't track: open one issue per name so someone adds their
+      # Instagram handle in /admin (handles can't be confirmed automatically).
+      - name: Flag new housemates
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -s data/wiki-new-entrants.txt ] || exit 0
+          while IFS= read -r who; do
+            [ -n "$who" ] || continue
+            title="New housemate on Wikipedia: $who"
+            if gh issue list -R "${{ github.repository }}" --state open --search "\"$title\" in:title" --json number --jq 'length' | grep -qx 0; then
+              gh issue create -R "${{ github.repository }}" --title "$title" --body "Wikipedia's housemate table lists **$who**, who isn't tracked on the site yet. Find their Instagram profile, confirm it's them (the bio usually mentions Bigg Boss Telugu 10), then add it at https://bbpulse-six.vercel.app/admin. Close this issue once added."
+            fi
+          done < data/wiki-new-entrants.txt

@@ -17,6 +17,10 @@ export interface Contestant {
   addedOn?: string;
   /** Set when status was changed by hand on /admin; the roster sync then leaves status alone. */
   manual?: boolean;
+  /** Set when scripts/sync-wikipedia.ts made the current eviction (so it may also undo it on re-entry). */
+  evictionSource?: "wikipedia";
+  /** Extra names other sources use for this contestant (e.g. Wikipedia's "Ramprasad"). */
+  aliases?: string[];
 }
 
 export interface Season {
