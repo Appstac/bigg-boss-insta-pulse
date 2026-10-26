@@ -30,6 +30,8 @@ GitHub Actions (every 30 min)            data branch                 Vercel site
 
 ## Roster changes (evictions, wildcards)
 
+- **Wikipedia eviction check (automatic):** `scripts/sync-wikipedia.ts` reads the "Housemates status" table on [the season page](https://en.wikipedia.org/wiki/Bigg_Boss_(Telugu_TV_series)_season_10) every **Sunday at 10:45 PM and 11:45 PM IST** (after the episode) and **Monday at 9:00 AM IST**, inside the collect workflow on GitHub Actions. It marks evictions and walk-outs with the day from the table, follows re-entries and Secret Room stints, and opens a GitHub issue when Wikipedia lists a housemate the site doesn't track yet (their Instagram handle then has to be added in `/admin`). Names it can't match uniquely are skipped with a warning; add an `aliases` entry to that contestant if that happens.
+
 - **Automatic:** every 6 hours `scripts/sync-roster.ts` reads the contestants tab on biggbosspulse.com (`season.json` → `sourceUrl`). It marks evictions (dated from the exit week), adds new wildcards, and takes their Instagram link when the page lists one. It never deletes anyone. If the page layout changes it makes no changes and the workflow shows a warning.
 - **Manual:** open `/admin`, paste the Instagram profile URL and click **Add contestant**. The account is verified, saved to the `data` branch, and a collection starts, so the new contestant is on every page within about a minute. Contestants the sync added without a handle are listed first, marked "Needs Instagram handle".
 - A status changed on `/admin` is marked `manual` and the automatic check leaves it alone.
