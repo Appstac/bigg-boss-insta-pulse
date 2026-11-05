@@ -110,3 +110,19 @@ jobs:
               gh issue create -R "${{ github.repository }}" --title "$title" --body "Wikipedia's housemate table lists **$who**, who isn't tracked on the site yet. Find their Instagram profile, confirm it's them (the bio usually mentions Bigg Boss Telugu 10), then add it at https://bbpulse-six.vercel.app/admin. Close this issue once added."
             fi
           done < data/wiki-new-entrants.txt
+
+      # A single contestant's handle stopped working (renamed, deleted or made personal): open one
+      # issue per handle so it gets fixed in /admin instead of the contestant silently going blank.
+      - name: Flag broken Instagram handles
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -s data/collect-missing-handles.txt ] || exit 0
+          while IFS= read -r who; do
+            [ -n "$who" ] || continue
+            title="Instagram handle not found: $who"
+            if gh issue list -R "${{ github.repository }}" --state open --search "\"$title\" in:title" --json number --jq 'length' | grep -qx 0; then
+              gh issue create -R "${{ github.repository }}" --title "$title" --body "The collector can no longer read **$who** on Instagram, so their numbers have stopped updating. The account was probably renamed (or deleted, or switched to a personal account). Find their current profile and update the handle at https://bbpulse-six.vercel.app/admin (paste the new profile link in their row and Save). Close this issue once fixed."
+            fi
+          done < data/collect-missing-handles.txt

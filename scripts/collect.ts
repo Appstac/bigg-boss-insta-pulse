@@ -117,6 +117,8 @@ async function main() {
   const today = new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 10);
   let ok = 0;
   const failures: string[] = [];
+  // Handles Instagram no longer recognises (renamed, deleted or switched to a personal account).
+  const missingHandles: string[] = [];
 
   for (const c of contestants) {
     if (!c.instagram) {
@@ -171,8 +173,15 @@ async function main() {
       console.log(`✓ ${c.name} (@${c.instagram}): ${bd.followers_count.toLocaleString("en-IN")} followers, ${media.length} posts read`);
     } catch (e) {
       failures.push(`${c.name} (@${c.instagram}): ${(e as Error).message}`);
+      if (/invalid user id|cannot find user|does not exist/i.test((e as Error).message)) missingHandles.push(`${c.name} (@${c.instagram})`);
     }
   }
+
+  // Only flag individual broken handles; if most contestants fail it's an API/token problem instead.
+  writeFileSync(
+    path.join(DATA, "collect-missing-handles.txt"),
+    missingHandles.length && ok >= contestants.length / 2 ? missingHandles.join("\n") + "\n" : "",
+  );
 
   snapshots.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
   if (ok > 0) {

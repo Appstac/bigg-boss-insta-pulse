@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 !.env.example
+
+# Per-run notes written by the collector / Wikipedia check
+data/collect-missing-handles.txt
+data/wiki-new-entrants.txt
