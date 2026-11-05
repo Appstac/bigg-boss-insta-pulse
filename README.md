@@ -25,6 +25,7 @@ GitHub Actions (every 30 min)            data branch                 Vercel site
 - **`master`** holds the code. **`data`** holds only the latest data files as one force-pushed commit; history lives inside `snapshots.json`. `vercel.json` stops Vercel from deploying the `data` branch.
 - `data/` on `master` is a build-time fallback and the local-development copy.
 - Pages check the data branch's latest commit every 60 s (files are fetched per commit, so they are only downloaded when they change). Open pages poll `/api/version` once a minute and refresh in place when newer data exists.
+- **Backup scheduler:** GitHub often skips scheduled runs, so when the data is over 30 minutes old the site starts a collection itself (`kickCollectorIfStale` in `src/lib/github.ts`). It's triggered by any open page (via `/api/version`) and by `GET /api/cron`, which an external pinger such as cron-job.org can call every 15 minutes. Only one run is ever pending at a time.
 - Numbers use international notation (1.85M, 931K). Dark mode is the default; the header toggle remembers a light choice per device.
 - Instagram numbers come from the official Graph API **Business Discovery** endpoint (Business/Creator accounts only). Reach and impressions are private to each account, so the site uses **engagement rate**: the median of (likes + comments) ÷ followers per post. It's a median because collab reels with the show's accounts can reach far beyond a contestant's own followers.
 

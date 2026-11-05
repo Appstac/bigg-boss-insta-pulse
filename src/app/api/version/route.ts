@@ -2,11 +2,12 @@
  * Lightweight "is there newer data?" check used by LiveRefresh on every open page.
  * Returns the latest data-branch commit. When a client reports it is showing an older version,
  * the live-data cache is expired (at most once per 20 s per server instance) so its next
- * refresh renders the new numbers.
+ * refresh renders the new numbers. It also starts a collection when the data has gone stale.
  */
 import { revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { LIVE_TAG } from "@/lib/data";
-import { hasWriteAccess, latestDataSha } from "@/lib/github";
+import { hasWriteAccess, kickCollectorIfStale, latestDataSha } from "@/lib/github";
 
 let lastExpired = 0;
 
@@ -19,6 +20,8 @@ export async function GET(request: Request) {
   } catch {
     return Response.json({ version: null }, { headers: { "cache-control": "no-store" } });
   }
+  // Visitors double as a backup scheduler: if GitHub skipped the last runs, start one.
+  after(() => kickCollectorIfStale());
   const have = new URL(request.url).searchParams.get("have");
   if (have && /^[0-9a-f]{40}$/.test(have) && have !== version && Date.now() - lastExpired > 20_000) {
     lastExpired = Date.now();

@@ -74,3 +74,41 @@ export async function runCollectorNow(): Promise<boolean> {
   });
   return res.status === 204;
 }
+
+/** How old the data may get before the site starts a collection itself. */
+export const STALE_AFTER_MIN = 30;
+let lastKick = 0;
+
+export type KickResult = "fresh" | "running" | "started" | "throttled" | "failed" | "unavailable";
+
+/**
+ * GitHub runs scheduled workflows on a best-effort basis and has been skipping most of the
+ * 30-minute runs, so the site also starts the collector when the published data is older than
+ * STALE_AFTER_MIN and no run is already queued or running. Safe to call often: at most one check
+ * per 2 minutes per server instance, and never more than one pending run.
+ */
+export async function kickCollectorIfStale(): Promise<KickResult> {
+  if (!hasWriteAccess()) return "unavailable";
+  if (Date.now() - lastKick < 120_000) return "throttled";
+  lastKick = Date.now();
+  try {
+    const commit = await fetch(`https://api.github.com/repos/${repo()}/commits/${DATA_BRANCH}`, {
+      headers: headers({ accept: "application/vnd.github+json" }),
+      cache: "no-store",
+    });
+    if (!commit.ok) return "failed";
+    const date = ((await commit.json()) as { commit: { committer: { date: string } } }).commit.committer.date;
+    if (Date.now() - Date.parse(date) < STALE_AFTER_MIN * 60_000) return "fresh";
+    for (const status of ["queued", "in_progress"]) {
+      const runs = await fetch(
+        `https://api.github.com/repos/${repo()}/actions/workflows/collect.yml/runs?status=${status}&per_page=1`,
+        { headers: headers({ accept: "application/vnd.github+json" }), cache: "no-store" },
+      );
+      if (!runs.ok) return "failed";
+      if (((await runs.json()) as { total_count: number }).total_count > 0) return "running";
+    }
+    return (await runCollectorNow()) ? "started" : "failed";
+  } catch {
+    return "failed";
+  }
+}
