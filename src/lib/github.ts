@@ -2,15 +2,18 @@ import "server-only";
 
 /**
  * Minimal GitHub helper for the `data` branch. The repo is taken from GITHUB_REPO ("owner/name")
- * or, on Vercel, from the connected Git repository. GITHUB_TOKEN is a fine-grained token for this
+ * or, on Vercel, from the connected Git repository (falling back to DEFAULT_REPO). GITHUB_TOKEN is a fine-grained token for this
  * repo with Contents: read/write and Actions: read/write.
  */
 export const DATA_BRANCH = "data";
 
-export function repo(): string | null {
+/** Used when neither GITHUB_REPO nor Vercel's Git variables are set (e.g. on Cloudflare). */
+const DEFAULT_REPO = "Appstac/bigg-boss-insta-pulse";
+
+export function repo(): string {
   if (process.env.GITHUB_REPO) return process.env.GITHUB_REPO;
   const { VERCEL_GIT_REPO_OWNER: owner, VERCEL_GIT_REPO_SLUG: slug } = process.env;
-  return owner && slug ? `${owner}/${slug}` : null;
+  return owner && slug ? `${owner}/${slug}` : DEFAULT_REPO;
 }
 
 export function hasWriteAccess(): boolean {
@@ -21,6 +24,8 @@ function headers(extra: Record<string, string> = {}) {
   return {
     authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
     "x-github-api-version": "2022-11-28",
+    // GitHub rejects requests without one; Cloudflare Workers' fetch doesn't add it by default.
+    "user-agent": "bb-insta-pulse",
     ...extra,
   };
 }

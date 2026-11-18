@@ -61,6 +61,15 @@ The repo is detected from Vercel's Git connection (override with `GITHUB_REPO=ow
 
 **Vercel Hobby only deploys commits authored by the account owner.** Commit with the owner's GitHub identity (`git config user.name/user.email` in this repo).
 
+### Cloudflare Workers (second host)
+
+The same code also runs on Cloudflare Workers through [OpenNext](https://opennext.js.org/cloudflare); both hosts read the same `data` branch.
+
+- `wrangler.jsonc` and `open-next.config.ts` configure it. On Workers Builds `npm run build` runs `opennextjs-cloudflare build` (it checks `WORKERS_CI`), and the deploy command `npx wrangler deploy` hands off to `opennextjs-cloudflare deploy`. Vercel still runs a plain `next build`.
+- One-time: create the R2 bucket `bigg-boss-insta-pulse-opennext-cache` (Next.js page/data cache).
+- Worker variables (Settings → Variables and Secrets): `GITHUB_TOKEN`, `ADMIN_PASSWORD`, `IG_USER_ID`, `IG_ACCESS_TOKEN` as secrets. The repo defaults to `Appstac/bigg-boss-insta-pulse` (override with `GITHUB_REPO`).
+- Local check: `npm run cf:preview`.
+
 ### Local development
 
 ```bash

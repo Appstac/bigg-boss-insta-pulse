@@ -45,3 +45,8 @@ next-env.d.ts
 # Per-run notes written by the collector / Wikipedia check
 data/collect-missing-handles.txt
 data/wiki-new-entrants.txt
+
+# Cloudflare (OpenNext)
+.open-next
+.wrangler
+.dev.vars*

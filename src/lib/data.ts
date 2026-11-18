@@ -4,17 +4,24 @@ import { readFileSync, existsSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { hasWriteAccess, latestDataSha, readDataFile, repo, writeDataFile } from "./github";
 import type { Contestant, Dataset, IntradayPoint, Meta, Post, Profile, Season, Snapshot } from "./types";
+// Bundled into the build, so they're available on hosts without a filesystem (Cloudflare Workers).
+import bundledSeason from "../../data/season.json";
+import bundledContestants from "../../data/contestants.json";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 
 /**
  * Live data (snapshots, posts, photos) is committed every ~30 minutes to the repo's `data` branch.
- * On Vercel the site reads it from there with a short cache, so new numbers show up without a
+ * On Vercel and Cloudflare the site reads it from there with a short cache, so new numbers show up without a
  * redeploy. Locally (or if DATA_BASE_URL is set to "local") it reads ./data and ./public/avatars.
  */
+/** Running as a Cloudflare Worker (the OpenNext deployment), which has no project files on disk. */
+const ON_CLOUDFLARE = typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
+// WORKERS_CI: building on Cloudflare, so prerendered pages start from the live data too.
+const HOSTED = Boolean(process.env.VERCEL || process.env.WORKERS_CI) || ON_CLOUDFLARE;
 const DATA_BASE_URL =
-  process.env.DATA_BASE_URL ?? (process.env.VERCEL && repo() ? `https://raw.githubusercontent.com/${repo()}/data` : "local");
+  process.env.DATA_BASE_URL ?? (HOSTED ? `https://raw.githubusercontent.com/${repo()}/data` : "local");
 const REMOTE = DATA_BASE_URL !== "local";
 
 /** Seconds between checks for a new data-branch commit (the collector publishes every ~30 min). */
@@ -23,9 +30,13 @@ export const DATA_REVALIDATE = 60;
 export const LIVE_TAG = "live-data";
 
 function readLocal<T>(file: string, fallback: T): T {
-  const p = path.join(DATA_DIR, file);
-  if (!existsSync(p)) return fallback;
-  return JSON.parse(readFileSync(p, "utf8")) as T;
+  try {
+    const p = path.join(DATA_DIR, file);
+    if (!existsSync(p)) return fallback;
+    return JSON.parse(readFileSync(p, "utf8")) as T;
+  } catch {
+    return fallback; // no project files on this host (Cloudflare Workers)
+  }
 }
 
 /** One sha lookup per render, shared by every file read; the lookup itself is cached for 60 s. */
@@ -68,6 +79,7 @@ async function readLive<T>(file: string, fallback: T): Promise<T> {
 
 /** A hand-picked image in public/contestants/ always wins over the Instagram profile photo. */
 function handPicked(id: string): string | null {
+  if (ON_CLOUDFLARE) return null; // no filesystem; hand-picked photos are served on Vercel/local only
   for (const ext of ["jpg", "jpeg", "png", "webp"]) {
     const rel = `contestants/${id}.${ext}`;
     const abs = path.join(PUBLIC_DIR, rel);
@@ -93,8 +105,8 @@ async function readPosts(contestants: Contestant[]): Promise<Post[]> {
 
 export async function loadDataset(): Promise<Dataset> {
   // The roster is live data (roster sync + /admin edit it); season settings are code-level config.
-  const contestants = await readLive<Contestant[]>("contestants.json", readLocal<Contestant[]>("contestants.json", []));
-  const season = readLocal<Season>("season.json", {} as Season);
+  const contestants = await readLive<Contestant[]>("contestants.json", bundledContestants as Contestant[]);
+  const season = bundledSeason as Season;
   const [meta, profiles, snapshots, intraday, posts] = await Promise.all([
     readLive<Meta>("meta.json", { source: "demo", lastUpdated: null }),
     readLive<Record<string, Profile>>("profiles.json", {}),
@@ -112,7 +124,7 @@ export async function loadDataset(): Promise<Dataset> {
 
 /** Config-only access for places that just need the contestant list (e.g. generateStaticParams). */
 export function loadContestants(): Contestant[] {
-  return readLocal<Contestant[]>("contestants.json", []);
+  return bundledContestants as Contestant[];
 }
 
 /** Roster for the admin page, read uncached so edits are visible straight away. */
@@ -121,7 +133,7 @@ export async function readRoster(): Promise<Contestant[]> {
     const text = await readDataFile("contestants.json", { cache: "no-store" });
     if (text) return JSON.parse(text) as Contestant[];
   }
-  return readLocal<Contestant[]>("contestants.json", []);
+  return bundledContestants as Contestant[];
 }
 
 /** Saves the roster to the data branch (production) or ./data (local development). */
@@ -131,7 +143,7 @@ export async function writeRoster(roster: Contestant[], message: string): Promis
     await writeDataFile("contestants.json", json, message);
     return "github";
   }
-  if (process.env.VERCEL) throw new Error("GITHUB_TOKEN is not configured, so changes cannot be saved on the live site.");
+  if (HOSTED) throw new Error("GITHUB_TOKEN is not configured, so changes cannot be saved on the live site.");
   writeFileSync(path.join(DATA_DIR, "contestants.json"), json);
   return "local";
 }

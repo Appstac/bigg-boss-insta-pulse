@@ -1,0 +1,25 @@
+// Cloudflare Workers deployment (runs alongside Vercel; both read the same `data` branch).
+// Built with OpenNext: `npm run build` on Workers Builds runs `opennextjs-cloudflare build`
+// (see scripts/build.mjs), and `npx wrangler deploy` hands off to `opennextjs-cloudflare deploy`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bigg-boss-insta-pulse",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-17",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    // Self-reference used for background page revalidation; must match "name" above.
+    { "binding": "WORKER_SELF_REFERENCE", "service": "bigg-boss-insta-pulse" }
+  ],
+  "r2_buckets": [
+    // Page and data cache (Next.js incremental cache). Create this bucket once in the Cloudflare
+    // dashboard (R2 → Create bucket) before the first deploy.
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "bigg-boss-insta-pulse-opennext-cache" }
+  ],
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true }
+}
