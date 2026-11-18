@@ -21,6 +21,10 @@
     { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "bigg-boss-insta-pulse-opennext-cache" }
   ],
   "images": { "binding": "IMAGES" },
+  // Short address on the account's own domain; Cloudflare creates the DNS record and certificate on deploy.
+  "routes": [{ "pattern": "bb.appstac.com", "custom_domain": true }],
+  // Keep the workers.dev address working alongside it.
+  "workers_dev": true,
   "observability": { "enabled": true },
   // Keep variables set in the dashboard (IG_USER_ID, GRAPH_API_VERSION) on every deploy; secrets are
   // kept anyway. Values stay out of this public repo.
