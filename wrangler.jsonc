@@ -21,5 +21,8 @@
     { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "bigg-boss-insta-pulse-opennext-cache" }
   ],
   "images": { "binding": "IMAGES" },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // Keep variables set in the dashboard (IG_USER_ID, GRAPH_API_VERSION) on every deploy; secrets are
+  // kept anyway. Values stay out of this public repo.
+  "keep_vars": true
 }
