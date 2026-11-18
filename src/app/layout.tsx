@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
@@ -14,10 +14,21 @@ const THEME_SCRIPT = 'try{if(localStorage.getItem("theme")==="light")document.do
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
+const TITLE = "BB Telugu 10 · Insta Pulse";
+const DESCRIPTION =
+  "Live Instagram follower counts, growth, posting activity and engagement for every Bigg Boss Telugu Season 10 contestant, updated every 30 minutes.";
+
 export const metadata: Metadata = {
-  title: "BB Telugu 10 · Insta Pulse",
-  description: "Daily Instagram follower trends, posting activity and engagement for every Bigg Boss Telugu Season 10 contestant.",
+  // Absolute URLs for the preview images: each host links to itself.
+  metadataBase: new URL(process.env.VERCEL ? "https://bbpulse-six.vercel.app" : "https://bb.appstac.com"),
+  title: TITLE,
+  description: DESCRIPTION,
+  applicationName: "Insta Pulse",
+  openGraph: { type: "website", siteName: "Insta Pulse", title: TITLE, description: DESCRIPTION, locale: "en_IN" },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
+
+export const viewport: Viewport = { themeColor: "#09090b" };
 
 /**
  * Pages re-render at most every 5 minutes (must be a literal). Data files are only re-downloaded when
