@@ -4,7 +4,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bigg-boss-insta-pulse",
-  "main": ".open-next/worker.js",
+  "main": "cf-worker.mjs",
   "compatibility_date": "2026-11-17",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -25,6 +25,8 @@
   "routes": [{ "pattern": "bb.appstac.com", "custom_domain": true }],
   // Keep the workers.dev address working alongside it.
   "workers_dev": true,
+  // Wake every 10 min to start the collector if data is stale.
+  "triggers": { "crons": ["*/10 * * * *"] },
   "observability": { "enabled": true },
   // Keep variables set in the dashboard (IG_USER_ID, GRAPH_API_VERSION) on every deploy; secrets are
   // kept anyway. Values stay out of this public repo.
