@@ -25,8 +25,8 @@
   "routes": [{ "pattern": "bb.appstac.com", "custom_domain": true }],
   // Keep the workers.dev address working alongside it.
   "workers_dev": true,
-  // Wake every 10 min to start the collector if data is stale.
-  "triggers": { "crons": ["*/10 * * * *"] },
+  // Check every 15 min; the collector only starts if data is >25 min old (keeps Instagram calls ~every 30 min; a 15-min collection got the app blocked by Meta on 30 Sep).
+  "triggers": { "crons": ["*/15 * * * *"] },
   "observability": { "enabled": true },
   // Keep variables set in the dashboard (IG_USER_ID, GRAPH_API_VERSION) on every deploy; secrets are
   // kept anyway. Values stay out of this public repo.

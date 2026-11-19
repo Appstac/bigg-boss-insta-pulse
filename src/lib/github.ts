@@ -81,7 +81,7 @@ export async function runCollectorNow(): Promise<boolean> {
 }
 
 /** How old the data may get before the site starts a collection itself. */
-export const STALE_AFTER_MIN = 30;
+export const STALE_AFTER_MIN = 25;
 let lastKick = 0;
 
 export type KickResult = "fresh" | "running" | "started" | "throttled" | "failed" | "unavailable";
